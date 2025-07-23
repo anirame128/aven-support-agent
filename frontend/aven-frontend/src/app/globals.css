@@ -1,0 +1,166 @@
+/* Import Google Fonts - must come first */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #000000;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* Remove dark mode override to force light mode as default */
+/*
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #000000;
+    --foreground: #ffffff;
+  }
+}
+*/
+
+/* Remove Griffo Classico font-face and font-family overrides */
+/*
+@font-face {
+  font-family: 'Griffo Classico';
+  src: url('/fonts/Griffo Classico.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+*/
+
+body {
+  background: transparent !important;
+  color: #000;
+  font-family: 'Inter', system-ui, sans-serif !important;
+}
+
+/* Remove global font-family and font-size overrides */
+/*
+* {
+  font-family: 'Griffo Classico', system-ui, sans-serif !important;
+  font-size: 20px !important;
+}
+*/
+
+.prose, .bubble {
+  font-size: 0.875rem !important; /* 14px, smaller size */
+}
+.prose {
+  @apply text-sm leading-relaxed;
+}
+.prose a {
+  @apply underline;
+  color: #000;
+}
+.prose h2 {
+  @apply font-semibold;
+}
+
+/* Light grey transparent chat container */
+.glass {
+  background: rgba(128, 128, 128, 0.15) !important;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 1rem;
+  border: 1px solid rgba(128, 128, 128, 0.2);
+}
+
+input {
+  background: rgba(255, 255, 255, 0.9) !important;
+}
+
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Light grey transparent chat bubbles */
+.bubble {
+  background: rgba(128, 128, 128, 0.2) !important;
+  color: #000 !important;
+  border-radius: 1rem;
+  border: 1px solid rgba(128, 128, 128, 0.25);
+  font-size: 0.875rem !important;
+  animation: fadeInUp 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Light grey transparent input */
+.input-grey {
+  background: rgba(128, 128, 128, 0.15) !important;
+  border: 1px solid rgba(128, 128, 128, 0.3) !important;
+}
+
+/* Loading spinner background */
+.loading-bg {
+  background: rgba(128, 128, 128, 0.15) !important;
+  border: 1px solid rgba(128, 128, 128, 0.2);
+}
+
+/* Black send button */
+.btn-black {
+  background: #000 !important;
+  color: #fff !important;
+  border: none;
+  transition: background 0.2s;
+}
+.btn-black:hover {
+  background: #222 !important;
+}
+
+/* Remove blue and gray backgrounds from chat bubbles */
+.bg-blue-100, .bg-blue-50, .bg-blue-900, .bg-gray-100, .bg-gray-800 {
+  background-color: transparent !important;
+}
+.text-blue-900, .text-blue-100, .text-gray-900, .text-gray-100 {
+  color: #000 !important;
+}
+
+/* Ensure bullet points are visible in prose content */
+.prose ul {
+  list-style-type: disc !important;
+  margin-left: 1.5rem !important;
+  margin-bottom: 1rem !important;
+  padding-left: 0 !important;
+}
+
+.prose ol {
+  list-style-type: decimal !important;
+  margin-left: 1.5rem !important;
+  margin-bottom: 1rem !important;
+  padding-left: 0 !important;
+}
+
+.prose li {
+  margin-bottom: 0.5rem !important;
+  padding-left: 0.25rem !important;
+  display: list-item !important;
+}
+
+.prose ul li::marker {
+  color: #000 !important;
+}
+
+.prose ol li::marker {
+  color: #000 !important;
+}
+
+/* Ensure nested lists work properly */
+.prose ul ul, .prose ol ol, .prose ul ol, .prose ol ul {
+  margin-top: 0.5rem !important;
+  margin-bottom: 0.5rem !important;
+}
