@@ -8,6 +8,7 @@ import openai
 from openai import OpenAI
 import time
 import io
+from guardrails import check_guardrails
 
 load_dotenv()
 
@@ -126,6 +127,10 @@ def run_rag_pipeline(question):
             "latency_ms": int((time.time() - t0) * 1000)
         }
 
+    # If the LLM says "I'm not sure about that", direct to support
+    if "i'm not sure about that" in answer.lower():
+        answer += "\n\nFor further assistance, please contact support@aven.com or visit [https://www.aven.com/call](https://www.aven.com/call)."
+
     return {
         "answer": answer,
         "sources": sources,
@@ -141,6 +146,18 @@ async def ask_question(req: Request):
     question = (await req.json()).get("question")
     if not question:
         return {"error": "No question provided."}
+    
+    # Guardrails check
+    check = check_guardrails(question)
+    if check["blocked"]:
+        reason = check["reason"]
+        violations = check.get("violations", [])
+        return {
+            "answer": "I'm sorry, but I can't help with that request.",
+            "sources": [],
+            "violations": violations
+        }
+    
     result = run_rag_pipeline(question)
     return result
 

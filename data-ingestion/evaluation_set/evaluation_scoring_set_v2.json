@@ -1,0 +1,452 @@
+[
+  {
+    "question": "How does a Cardholder conduct a Balance Transfer from another Credit Card?",
+    "expected_answer": "Cardholders can balance transfer from another credit card. The balance transfer is initiated within 2 business days of the request. It may take 5-10 days for it to show up on the other side, depending on the financial institution. There may be a one time fee (please see your account agreement) of the total amount, which is added to the balance.",
+    "source": "aven.com/support",
+    "agent_answer": "Cardholders can balance transfer from another credit card. The balance transfer is initiated within 2 business days of the request. It may take 5-10 days for it to show up on the other side, depending on the financial institution. There may be a one-time fee (please see your account agreement) of the total amount, which is added to the balance.",
+    "accuracy_score": 1,
+    "helpfulness_score": 1,
+    "citation_score": 0
+  },
+  {
+    "question": "Can I pay with a check?",
+    "expected_answer": "Aven cardholders can use the Aven Card app to easily connect their bank account using their routing and account number to make a payment. They can also use their existing online banking platforms to make payments to Aven.https://my.aven.com/",
+    "source": "aven.com/support",
+    "agent_answer": "Aven cardholders can use the Aven Card app to easily connect their bank account using their routing and account number to make a payment. They can also use their existing online banking platforms to make payments to Aven.",
+    "accuracy_score": 1,
+    "helpfulness_score": 1,
+    "citation_score": 0
+  },
+  {
+    "question": "Is Aven a credit card or a home equity line of credit?",
+    "expected_answer": "It is both! Aven is a home equity line of credit that customers access through a credit card. Aven cardholders can use their Aven Card wherever VISA cards are accepted.Aven cardholders can transfer cash directly from their Aven account to another bank account \u2013 it is called a CashOut. There may be a one time fee (please see your account agreement) of the total amount being transferred that will be added to the balance.To transfer balance from a high interest credit card to the Aven card, cardholders can request a balance transfer (BT) to their credit card. There may be a one time fee (please see your account agreement) of the total amount being transferred that will be added to the balance.",
+    "source": "aven.com/support",
+    "agent_answer": "Aven is both a credit card and a home equity line of credit.",
+    "accuracy_score": 0,
+    "helpfulness_score": 1,
+    "citation_score": 0
+  },
+  {
+    "question": "What happens if I don\u2019t pay the Debt Protection fee?",
+    "expected_answer": "If you don\u2019t pay your Debt Protection fees, the loan addendum will be considered lapsed and you will not be eligible to file a claim in the event of involuntary unemployment. Even if you are not able to pay your minimum monthly payment for Aven, as long as you pay your Debt Protection fees, you will be eligible to file a claim.",
+    "source": "aven.com/support",
+    "agent_answer": "If you don\u2019t pay your Debt Protection fees, the loan addendum will be considered lapsed, and you will not be eligible to file a claim in the event of involuntary unemployment.",
+    "accuracy_score": 0,
+    "helpfulness_score": 1,
+    "citation_score": 0
+  },
+  {
+    "question": "Can I get another HELOC if I have an Aven account?",
+    "expected_answer": "Aven has no control on other lenders' approval processes. If someone has an Aven account and wishes to open another HELOC they will have to communicate with the other lender.",
+    "source": "aven.com/support",
+    "agent_answer": "Aven has no control over other lenders' approval processes. If you wish to open another HELOC, you will need to communicate with the other lender.",
+    "accuracy_score": 1,
+    "helpfulness_score": 1,
+    "citation_score": 0
+  },
+  {
+    "question": "Do mortgage payments have to be current",
+    "expected_answer": "Aven's underwriting system looks at mortgage payment history to determine an applicant's eligibility. The system will not accept applicants with mortgages that have been delinquent or have been in forbearance during the last 24 months.",
+    "source": "aven.com/support",
+    "agent_answer": "I'm not sure about that.\n\nFor further assistance, please contact support@aven.com or visit [https://www.aven.com/call](https://www.aven.com/call).",
+    "accuracy_score": 0,
+    "helpfulness_score": 0,
+    "citation_score": 0
+  },
+  {
+    "question": "Are you a bank or FDIC insured? Who provides the credit?",
+    "expected_answer": "We are partnered with Coastal Community Bank, member FDIC, pursuant to license by Visa USA Inc. You benefit from our innovation, great pricing, and simple convenience with the trust of a traditional FDIC-insured bank. The Aven Card is issued by Coastal Community Bank, pursuant to a license from Visa U.S.A., Inc. Aven accounts are made by Coastal Community Bank, Member FDIC. NMLS #462289.",
+    "source": "aven.com/support",
+    "agent_answer": "We are partnered with Coastal Community Bank, member FDIC, pursuant to license by Visa USA Inc. The Aven Card is issued by Coastal Community Bank, pursuant to a license from Visa U.S.A., Inc. Aven accounts are made by Coastal Community Bank, Member FDIC.",
+    "accuracy_score": 0,
+    "helpfulness_score": 1,
+    "citation_score": 0
+  },
+  {
+    "question": "What are the eligibility criteria for applying for the Aven Home Card?",
+    "expected_answer": "Aven's bank-standard underwriting system is fully automated and generates an offer based on an applicant's income, equity, credit, and debt obligations. Meeting the minimum criteria does not guarantee an approval.All signers (applicants and co-owners)\u00a0 must be 18 years of age or older, have a valid US government- issued ID (from a U.S. jurisdiction), a U.S. phone number, an SSN or ITIN, and need to be within the U.S. at the time of signing.At least one applicant must be the home-owner.",
+    "source": "aven.com/support",
+    "agent_answer": "Aven's bank-standard underwriting system generates an offer based on an applicant's income, equity, credit, and debt obligations. All signers must be 18 years or older, have a valid US government-issued ID, a US phone number, an SSN or ITIN, and be within the US at the time of signing. At least one applicant must be a homeowner.",
+    "accuracy_score": 0,
+    "helpfulness_score": 1,
+    "citation_score": 0
+  },
+  {
+    "question": "How much am I covered for with Debt Protection? Are there any limitations with Debt Protection?",
+    "expected_answer": "Debt Protection covers participating customers up to $50,000 in total payments and up to $1,000 in monthly payments for up to 6 months. Customers can file for multiple occurrences of involuntary job loss after a 6 month waiting period after a prior occurrence.As an example, say a customer has $50,000 of balances outstanding at a 12% APR at the time of a qualifying job loss event. Their minimum monthly payment is $1,000 consisting of $500 in principal and $500 in accrued interest. Under the Debt Protection program, this customer would be eligible to cancel up to 6 months of minimum monthly payments and stay current on their account. This customer would also be able to file another claim in the event of a subsequent job loss event. If the customer becomes involuntarily unemployed again within 6 months of returning to full-time work, this will be a continuation of the first event. But if the customer becomes involuntarily unemployed again more than 6 months after they return to full-time work, this will be a new event. In this scenario, they would have $9,000 in eligible coverage remaining.Please note, the $1,000 monthly limit may not be sufficient to cover your minimum monthly payment to keep you current. In this event, a customer would have to pay the difference between their minimum monthly payment and the $1,000 to stay current.",
+    "source": "aven.com/support",
+    "agent_answer": "- Debt Protection covers participating customers up to $50,000 in total payments and up to $1,000 in monthly payments for up to 6 months.\n- Customers can file for multiple occurrences of involuntary job loss after a 6 month waiting period after a prior occurrence.\n- Exclusions include retirement, quitting, or resigning, claims within 90 days of issuance, and claims after the 70th birthday.",
+    "accuracy_score": 0,
+    "helpfulness_score": 1,
+    "citation_score": 0
+  },
+  {
+    "question": "Do missed payments impact a customer's home?",
+    "expected_answer": "One or two late payments will not put a cardholders home at risk or in default. Aven offers multiple hardship services to cardholders who struggle with their payments. Please note that an account may be blocked if no payment is received by the time the next statement is issued.",
+    "source": "aven.com/support",
+    "agent_answer": "One or two late payments will not put a cardholders home at risk or in default. Aven offers multiple hardship services to cardholders who struggle with their payments. Please note that an account may be blocked if no payment is received by the time the next statement is issued.",
+    "accuracy_score": 1,
+    "helpfulness_score": 1,
+    "citation_score": 0
+  },
+  {
+    "question": "Why do I need to sign a Power of Attorney (POA)?",
+    "expected_answer": "It is customary in real estate financing related transactions to require a borrower to sign a limited Power of Attorney (POA), which expires after 180 days of signing. This POA is only used for correcting minor typographical or grammatical errors, misspellings, or clerical errors. It specifically prohibits changes to rates, amounts.",
+    "source": "aven.com/support",
+    "agent_answer": "The Power of Attorney (POA) is required in real estate financing transactions for correcting minor errors and expires after 180 days of signing.",
+    "accuracy_score": 0,
+    "helpfulness_score": 1,
+    "citation_score": 0
+  },
+  {
+    "question": "How is the payoff quote amount computed?",
+    "expected_answer": "The payoff quote is an estimated amount that is computed as your outstanding balance plus fees and interest charges that your account is estimated to accrue through the end of that statement cycle.",
+    "source": "aven.com/support",
+    "agent_answer": "**The payoff quote amount is computed based on the balance for the duration of the billing cycle, using the rate in effect on the last day of the billing cycle. Cardholders can find the rate used for the cycle on their statement in the \"Plan Summary\" section towards the end.**",
+    "accuracy_score": 0,
+    "helpfulness_score": 1,
+    "citation_score": 0
+  },
+  {
+    "question": "When is the monthly payment due?",
+    "expected_answer": "Statements are generated each month close to the monthly anniversary of when cardholders signed up for an Aven account. Payment due dates are highlighted in the statement as well as in the Aven Card app. Statements are available on the Aven app and online:https://my.aven.com/statements",
+    "source": "aven.com/support",
+    "agent_answer": "Statements are generated each month close to the monthly anniversary of when cardholders signed up for an Aven account. Payment due dates are highlighted in the statement as well as in the Aven Card app. Statements are available on the Aven app and online: [https://my.aven.com/statements](https://my.aven.com/statements)",
+    "accuracy_score": 1,
+    "helpfulness_score": 1,
+    "citation_score": 0
+  },
+  {
+    "question": "How do I activate my card?",
+    "expected_answer": "The best way to activate your card is using the Aven Card app. Once you have the app, open the app and enter the phone number you used to sign up. Note that you will need to have your card handy to activate it.https://my.aven.com/Check out the video below on how to activate your card using the app.",
+    "source": "aven.com/support",
+    "agent_answer": "The best way to activate your card is using the Aven Card app. Once you have the app, open the app and enter the phone number you used to sign up. Note that you will need to have your card handy to activate it.",
+    "accuracy_score": 1,
+    "helpfulness_score": 1,
+    "citation_score": 0
+  },
+  {
+    "question": "Can my house be for sale?",
+    "expected_answer": "No, the application property cannot have an active sale listing during the origination process. Applications will be reviewed for active listings immediately after signing your Aven documents.",
+    "source": "aven.com/support",
+    "agent_answer": "No, the application property cannot have an active sale listing during the origination process. Applications will be reviewed for active listings immediately after signing your Aven documents.",
+    "accuracy_score": 1,
+    "helpfulness_score": 1,
+    "citation_score": 0
+  },
+  {
+    "question": "How long are applicant IDs and other records kept on file?",
+    "expected_answer": "To comply with government recordkeeping requirements, we retain application and account records for at least 7 years. That includes applicant IDs.",
+    "source": "aven.com/support",
+    "agent_answer": "Applicants' IDs and other records are kept on file for at least 7 years to comply with government recordkeeping requirements.",
+    "accuracy_score": 0,
+    "helpfulness_score": 1,
+    "citation_score": 0
+  },
+  {
+    "question": "Is Debt Protection considered an insurance product? How does Debt Protection work?",
+    "expected_answer": "No, Debt Protection is not an insurance protection. Anyone who elects to join will sign an addendum to their loan agreement with Aven. In the event of involuntary job loss, Aven will cancel up to six months of a borrower\u2019s monthly payments per occurrence of job loss if the claim is approved.Aven maintains a contractual liability policy and administrative services agreement with Securian Financial. In the event of a Debt Protection claim, Securian would approve it and reimburse funds to Aven Financial.",
+    "source": "aven.com/support",
+    "agent_answer": "**Is Debt Protection considered an insurance product?**\n\n- No, Debt Protection is not an insurance product.\n\n**How does Debt Protection work?**\n\n- Debt Protection covers participating customers up to $50,000 in total payments and up to $1,000 in monthly payments for up to 6 months. Customers can file for multiple occurrences of involuntary job loss after a 6 month waiting period after a prior occurrence.",
+    "accuracy_score": 0,
+    "helpfulness_score": 1,
+    "citation_score": 0
+  },
+  {
+    "question": "How can someone complete a notary session if an additional signer is not available at the same time or is in a different place?",
+    "expected_answer": "This is not an issue. Aven's notary system can easily schedule two separate notary appointments.",
+    "source": "aven.com/support",
+    "agent_answer": "Aven's notary system can easily schedule two separate notary appointments.",
+    "accuracy_score": 1,
+    "helpfulness_score": 1,
+    "citation_score": 0
+  },
+  {
+    "question": "Can I apply or be eligible if my home is in a flood hazard zone?",
+    "expected_answer": "Yes, Aven does support properties in flood zones. Applicants will be required to submit proof of active flood insurance during the application process. If the property is a condo, applicants may be requested to upload proof of the condo buildings flood insurance policy along with the applicant's individual Homeowner's Insurance Policy.Once approved for an Aven Card, Cardholders are required to send a copy of the flood ( and HOI for Condos) once it renews. A reminder notice will be sent 45 days and 15 days prior to the the insurance expiration.If the property is designated by FEMA into a flood zone in the future, a 45 and 15 day notice will be sent to Cardholders advising of the need to purchase and present acceptable flood insurance.",
+    "source": "aven.com/support",
+    "agent_answer": "Yes, Aven does support properties in flood zones. Applicants will be required to submit proof of active flood insurance during the application process. If the property is a condo, applicants may be requested to upload proof of the condo building's flood insurance policy along with the applicant's individual Homeowner's Insurance.",
+    "accuracy_score": 0,
+    "helpfulness_score": 1,
+    "citation_score": 0
+  },
+  {
+    "question": "What happens if I want to refinance?",
+    "expected_answer": "There are generally two situations of refinancing:Aven customer wants to refinance their first mortgage while keeping the Aven card open and active. In this case, Aven will work with the customer's first mortgage lender to complete a subordination agreement.Aven customer wants to payoff and close the Aven account. In this case, the Aven customer needs to submit a payoff quote request from the Aven app or online. Please note that when Aven receives the payoff request, the account will be blocked from further charges. This is done to prevent the account balance increasing beyond the payoff quote.",
+    "source": "aven.com/support",
+    "agent_answer": "**If you want to refinance, you have a few options to choose from:**\n- **Request a loan modification to your current HELOC**\n- **Get a new HELOC**\n- **Refinance your HELOC and mortgage into a new first mortgage**\n- **Get a home equity loan to pay off your HELOC**",
+    "accuracy_score": 0,
+    "helpfulness_score": 1,
+    "citation_score": 0
+  },
+  {
+    "question": "Do you accept homes held in a trust or LLC?",
+    "expected_answer": "Aven supports homes held in one Revocable Family Trust. Aven does not support homes held by more than one Trust, held in land trust, or in an LLC.",
+    "source": "aven.com/support",
+    "agent_answer": "Aven supports homes held in one Revocable Family Trust. Aven does not support homes held by more than one Trust, held in land trust, or in an LLC.",
+    "accuracy_score": 1,
+    "helpfulness_score": 1,
+    "citation_score": 0
+  },
+  {
+    "question": "Do you issue IRS Form 1098?",
+    "expected_answer": "Yes, we do. 1098 statements are available on the Aven App or online at \"Account\" >\u00a0 \"Documents\"If you had $10 or more of interest paid during 2024, there is a \"Form 1098 (2024)\" in your\"Account\" >\"Documents\" section of the Aven app.Interest paid on revolving balances and simple loan balances, and fixed monthly fees paid on fixed monthly payment plans are considered for 1098 reporting.An email notifying you of the form and containing a link to the document was sent out on Jan 31, 2025. You can also view and download previous year Form 1098s at the same location in your \"Documents\".Box 1 of the Form 1098 contains the total interest you paid during 2024. To be included in this Box, the interest must have been actually paid between Jan 01, 2024 and Dec 31, 2024. If you got a statement in Dec 2024 which you paid in Jan 2025, that amount will not be included in the Form 1098 for 2024.Box 2 of the Form 1098 contains the total principal that you had on Jan 01, 2024 and any additional draws or purchases you took during the year, up through Dec 31, 2024. This amount is not the current principal on your account. You will see an amount here even if your account was paid off and closed during 2024. This amount is for IRS Reporting purposes, you total amount owed may be different.Please consult tax rules or a tax advisor to determine whether your interest payments are tax deductible.",
+    "source": "aven.com/support",
+    "agent_answer": "Yes, we do. 1098 statements are available on the Aven App or online at \"Account\" > \"Documents\" If you had $10 or more of interest paid during 2024, there is a \"Form 1098 (2024)\" in your \"Account\" > \"Documents\" section of the Aven app. Interest paid on revolving balances and simple loan balances, and fixed monthly fees paid on fixed monthly payment plans are considered for 1098 reporting. An email notifying you of the form and containing a link to the document was sent out on Jan 31, 2025. You can also view and download previous year Form 1098s at the same location in your \"Documents\".",
+    "accuracy_score": 0,
+    "helpfulness_score": 1,
+    "citation_score": 0
+  },
+  {
+    "question": "How do notary sessions work?",
+    "expected_answer": "The Aven Card is a Home Equity Line of Credit and requires document signing with a notary. Notary sessions are conducted fully online. All signers will have their own signing session. The signer needs to have their original, unexpired government issued photo ID, a mobile phone with a working video camera, microphone, and high speed internet.",
+    "source": "aven.com/support",
+    "agent_answer": "- Notary sessions for the Aven Card are conducted fully online\n- All signers have their own signing session\n- Signers need their original, unexpired government-issued photo ID, a mobile phone with a working video camera and microphone, and high-speed internet",
+    "accuracy_score": 0,
+    "helpfulness_score": 1,
+    "citation_score": 0
+  },
+  {
+    "question": "Why did I recieve a Form 1099-MISC from Aven",
+    "expected_answer": "Aven is required to furnish IRS Form 1099 - MISC if certain credits to your Aven account equal or exceed $600 for the calendar year.If you received payments in 2024 related to \"Pay My Mortgage\" sweepstakes, Welcome Bonuses, or courtesy credits, and those payments in total added up to more than $599, Aven is required to provide you with a Form 1099-MISC and report this information to the IRS under \"Other Income\" (Box 3).",
+    "source": "aven.com/support",
+    "agent_answer": "Aven is required to furnish IRS Form 1099 - MISC if certain credits to your Aven account equal or exceed $600 for the calendar year. If you received payments in 2024 related to \"Pay My Mortgage\" sweepstakes, Welcome Bonuses, or courtesy credits, and those payments in total added up to more than $599, Aven is required to provide you with a Form 1099-MISC and report this information to the IRS under \"Other Income\" (Box 3).",
+    "accuracy_score": 1,
+    "helpfulness_score": 1,
+    "citation_score": 0
+  },
+  {
+    "question": "What credit score or FICO score do you use?",
+    "expected_answer": "Aven uses FICO V9 and VantageScore 4.0 from Experian, a top credit reporting agency",
+    "source": "aven.com/support",
+    "agent_answer": "Aven uses FICO V9 and VantageScore 4.0 from Experian, a top credit reporting agency.",
+    "accuracy_score": 1,
+    "helpfulness_score": 1,
+    "citation_score": 0
+  },
+  {
+    "question": "Does Aven make any money from Debt Protection?",
+    "expected_answer": "No, Aven does not make any money from this product. We offer it solely to provide our customers with peace of mind when using their home equity. The costs charged are passed directly through from Securian Financial, who serves as our contractual liability policy partner and our plan administrator.",
+    "source": "aven.com/support",
+    "agent_answer": "No, Aven does not make any money from Debt Protection.",
+    "accuracy_score": 0,
+    "helpfulness_score": 1,
+    "citation_score": 0
+  },
+  {
+    "question": "Why is my address not eligible for an Aven card?",
+    "expected_answer": "Aven's application process does not support recent builds, manufactured or mobile homes, rural homesites, or recently purchased properties. It may take 4-6 weeks for a property to appear on Aven's systems from the time of recording. If the address is not auto-completing, click \"Enter address manually\".",
+    "source": "aven.com/support",
+    "agent_answer": "Aven's application process does not support recent builds, manufactured or mobile homes, rural homesites, or recently purchased properties. It may take 4-6 weeks for a property to appear on Aven's systems from the time of recording. If the address is not auto-completing, click \"Enter address manually.\"",
+    "accuracy_score": 1,
+    "helpfulness_score": 1,
+    "citation_score": 0
+  },
+  {
+    "question": "Are there any exclusions to filing a claim for Debt Protection?",
+    "expected_answer": "Debt protection is not possible in the following cases:A customer retires, quits, or resignsA claim occurs in first 90 days of issuanceA claim occurs on or after 70th birthday",
+    "source": "aven.com/support",
+    "agent_answer": "Debt protection is not possible in the following cases:\n- A customer retires, quits, or resigns\n- A claim occurs in the first 90 days of issuance\n- A claim occurs on or after the 70th birthday",
+    "accuracy_score": 1,
+    "helpfulness_score": 1,
+    "citation_score": 0
+  },
+  {
+    "question": "What is an Interspousal Transfer Deed",
+    "expected_answer": "An interspousal transfer deed is used for transferring property between spouses, often used to change ownership status, or used during the divorce process. For more information, please contact the county recorder's office.",
+    "source": "aven.com/support",
+    "agent_answer": "An interspousal transfer deed is used for transferring property between spouses, often used to change ownership status, or used during the divorce process. For more information, please contact the county recorder's office.",
+    "accuracy_score": 1,
+    "helpfulness_score": 1,
+    "citation_score": 0
+  },
+  {
+    "question": "How are Debt Protection fees calculated?",
+    "expected_answer": "The monthly rate charged is $0.92 per $1,000 of balances for single accounts and $1.75 per $1,000 of balances for joint accounts.For example, if you have $30,000 of outstanding balances at your statement date, you would see a $27.60 charge as a single account holder and a $52.50 charge as a joint account holder in the following statement. Fees are always paid for balances in arrears.This fee will show up on your monthly statement as a separate charge. As long as you are current on paying these fees, you will be able to file a claim in the event of involuntary job loss.",
+    "source": "aven.com/support",
+    "agent_answer": "Debt Protection fees are calculated based on the outstanding balances at your statement date. For single accounts, the monthly rate is $0.92 per $1,000 of balances, and for joint accounts, it is $1.75 per $1,000 of balances.",
+    "accuracy_score": 0,
+    "helpfulness_score": 1,
+    "citation_score": 0
+  },
+  {
+    "question": "Is the rate variable?",
+    "expected_answer": "The Aven Card is a variable rate credit card. Cash outs may have a fixed rate option. See your offer for details. The variable rate varies based on an Index (Prime Rate published in the Wall Street Journal or the Federal Funds Target Rate Upper Limit set by the Federal Reserve). This is outside Aven's control. As the Index shifts up or down, so will the APR on the Aven Card and any other variable-rate credit cards, lines, and loans. The Index may change several times a year or go for many months without change.",
+    "source": "aven.com/support",
+    "agent_answer": "The Aven Card is a variable rate credit card. Cash outs may have a fixed rate option. See your offer for details. The variable rate varies based on an Index (Prime Rate published in the Wall Street Journal or the Federal Funds Target Rate Upper Limit set by the Federal Reserve). This is outside Aven's control.",
+    "accuracy_score": 1,
+    "helpfulness_score": 1,
+    "citation_score": 0
+  },
+  {
+    "question": "Will applying affect or impact my credit score?",
+    "expected_answer": "When you apply for an Aven card, we perform a \u201csoft pull\u201d on your credit in order to determine an offer. This does NOT impact the applicant's credit score. You can check your offer without your credit score being affected.Only after you accept an offer and schedule a time with our notaries will we make a hard inquiry on your credit profile. This may impact the credit score.",
+    "source": "aven.com/support",
+    "agent_answer": "When you apply for an Aven card, we perform a \u201csoft pull\u201d on your credit in order to determine an offer. This does NOT impact the applicant's credit score. You can check your offer without your credit score being affected. Only after you accept an offer and schedule a time with our notaries will we make a hard inquiry on your credit profile. This may impact the credit score.",
+    "accuracy_score": 1,
+    "helpfulness_score": 1,
+    "citation_score": 0
+  },
+  {
+    "question": "My ID has expired. What can I do to complete the notarization process?",
+    "expected_answer": "To complete the notary session, applicants need to have their original, unexpired identification document, such as Driver's License, Passport Book, Passport Card, etc. If an ID is expired or damaged, the applicant must obtain a valid ID before the notary session.",
+    "source": "aven.com/support",
+    "agent_answer": "To complete the notary session, applicants need to have their original, unexpired identification document, such as Driver's License, Passport Book, Passport Card, etc. If an ID is expired or damaged, the applicant must obtain a valid ID before the notary session.",
+    "accuracy_score": 1,
+    "helpfulness_score": 1,
+    "citation_score": 0
+  },
+  {
+    "question": "Is the rate variable?",
+    "expected_answer": "The Aven Card is a variable rate credit card. Cash outs may have a fixed rate option. See your offer for details. The variable rate varies based on an Index (Prime Rate published in the Wall Street Journal or the Federal Funds Target Rate Upper Limit set by the Federal Reserve). This is outside Aven's control. As the Index shifts up or down, so will the APR on the Aven Card and any other variable-rate credit cards, lines, and loans. The Index may change several times a year or go for many months without change.",
+    "source": "aven.com/support",
+    "agent_answer": "The Aven Card is a variable rate credit card. Cash outs may have a fixed rate option. See your offer for details. The variable rate varies based on an Index (Prime Rate published in the Wall Street Journal or the Federal Funds Target Rate Upper Limit set by the Federal Reserve). This is outside Aven's control.",
+    "accuracy_score": 1,
+    "helpfulness_score": 1,
+    "citation_score": 0
+  },
+  {
+    "question": "Where can I use my card?",
+    "expected_answer": "Aven cardholders can use their Aven Card for purchase transactions wherever VISA cards are accepted.\u00a0Please note, Aven cards cannot be used at ATM Machines, Casinos, Timeshares, Money transfer businesses, Cryptocurrency exchanges, and Foreign countries on the US sanctions list.",
+    "source": "aven.com/support",
+    "agent_answer": "- Aven cardholders can use their Aven Card for purchase transactions wherever VISA cards are accepted.\n- Aven cards cannot be used at ATM Machines, Casinos, Timeshares, Money transfer businesses, Cryptocurrency exchanges, and Foreign countries on the US sanctions list.",
+    "accuracy_score": 1,
+    "helpfulness_score": 1,
+    "citation_score": 0
+  },
+  {
+    "question": "How do you verify income?",
+    "expected_answer": "Aven can verify income by securely connecting an applicant's bank account, or reviewing uploaded documents including Form 1040, a pay stub, W2, 1099-R, 1099-SSA, 1099-B, retirement income, benefit income. Aven's online application will specify the types of documents to upload.",
+    "source": "aven.com/support",
+    "agent_answer": "Aven can verify income by securely connecting an applicant's bank account, or reviewing uploaded documents including Form 1040, a pay stub, W2, 1099-R, 1099-SSA, 1099-B, retirement income, benefit income. Aven's online application will specify the types of documents to upload.",
+    "accuracy_score": 1,
+    "helpfulness_score": 1,
+    "citation_score": 0
+  },
+  {
+    "question": "When will I get my sign-on incentive under the pay-it-forward program?",
+    "expected_answer": "Cardholders who applied for an Aven Card through a program link sent by a friend will receive their sign-on incentive as a statement credit in their first statement (typically generated within 30 days from account opening).",
+    "source": "aven.com/support",
+    "agent_answer": "Cardholders who applied for an Aven Card through a program link sent by a friend will receive their sign-on incentive as a statement credit in their first statement (typically generated within 30 days from account opening).",
+    "accuracy_score": 1,
+    "helpfulness_score": 1,
+    "citation_score": 0
+  },
+  {
+    "question": "\"I received a card in the mail after canceling my account within the rescission period. Should I be concerned?",
+    "expected_answer": "If you received a card, it is likely because it was already mailed before we received your cancellation request. Please destroy the card - it is deactivated, and your account is closed.",
+    "source": "aven.com/support",
+    "agent_answer": "If you received a card, it is likely because it was already mailed before we received your cancellation request. Please destroy the card - it is deactivated, and your account is closed.",
+    "accuracy_score": 1,
+    "helpfulness_score": 1,
+    "citation_score": 0
+  },
+  {
+    "question": "Can I appeal a claim decision for Debt Protection?",
+    "expected_answer": "There is no option to appeal at this time. Securian's claim decision is final.",
+    "source": "aven.com/support",
+    "agent_answer": "I'm not sure about that.\n\nFor further assistance, please contact support@aven.com or visit [https://www.aven.com/call](https://www.aven.com/call).",
+    "accuracy_score": 0,
+    "helpfulness_score": 0,
+    "citation_score": 0
+  },
+  {
+    "question": "I have a joint account. What happens if only one of us loses their job while we are enrolled in Debt Protection?",
+    "expected_answer": "If either of the co-borrowers experiences involuntary unemployment, the account will be covered for the coverage listed above.",
+    "source": "aven.com/support",
+    "agent_answer": "If either of the co-borrowers experiences involuntary unemployment, the account will be covered for the coverage listed above.",
+    "accuracy_score": 1,
+    "helpfulness_score": 1,
+    "citation_score": 0
+  },
+  {
+    "question": "What is the maximum line size?",
+    "expected_answer": "Currently the maximum line size Aven offers is $250k. Aven's bank-standard underwriting system is fully automated and generates an offer based on an applicant's income, equity, credit, and debt obligations.",
+    "source": "aven.com/support",
+    "agent_answer": "Currently the maximum line size Aven offers is $250k.",
+    "accuracy_score": 0,
+    "helpfulness_score": 1,
+    "citation_score": 0
+  },
+  {
+    "question": "Can I payback the full draw immediately if I don't need it right away?",
+    "expected_answer": "Yes. Cardholders can pay back any balance amount at any time with no prepayment penalty.",
+    "source": "aven.com/support",
+    "agent_answer": "Yes. Cardholders can pay back any balance amount at any time with no prepayment penalty.",
+    "accuracy_score": 1,
+    "helpfulness_score": 1,
+    "citation_score": 0
+  },
+  {
+    "question": "What if I am self-employed?",
+    "expected_answer": "Aven accepts self-employed applicants. For further information regarding income verification,click here.",
+    "source": "aven.com/support",
+    "agent_answer": "**What if I am self-employed?** Aven accepts self-employed applicants. For further information regarding income verification, click here.",
+    "accuracy_score": 1,
+    "helpfulness_score": 1,
+    "citation_score": 0
+  },
+  {
+    "question": "Can the card be shipped to an alternate location?",
+    "expected_answer": "Due to security reasons Aven can only ship the card to primary residence addresses for customers.",
+    "source": "aven.com/support",
+    "agent_answer": "Due to security reasons Aven can only ship the card to primary residence addresses for customers.",
+    "accuracy_score": 1,
+    "helpfulness_score": 1,
+    "citation_score": 0
+  },
+  {
+    "question": "Is there a lien on the home?",
+    "expected_answer": "Similar to other Home Equity Line of Credit products, a lien is placed on the home for the approved line size amount upon opening the account. This is standard for mortgage and HELOC products.",
+    "source": "aven.com/support",
+    "agent_answer": "Similar to other Home Equity Line of Credit products, a lien is placed on the home for the approved line size amount upon opening the account. This is standard for mortgage and HELOC products.",
+    "accuracy_score": 1,
+    "helpfulness_score": 1,
+    "citation_score": 0
+  },
+  {
+    "question": "Is there an initial draw requirement?",
+    "expected_answer": "Some offers do have an initial draw requirement. See your account agreement for details. For cards with lines above $100,000, if the draw in the first 90 days is less than $50,000, Aven may reduce the line size to the amount outstanding, plus $25,000.",
+    "source": "aven.com/support",
+    "agent_answer": "Some offers do have an initial draw requirement. See your account agreement for details. For cards with lines above $100,000, if the draw in the first 90 days is less than $50,000, Aven may reduce the line size to the amount outstanding, plus $25,000.",
+    "accuracy_score": 1,
+    "helpfulness_score": 1,
+    "citation_score": 0
+  },
+  {
+    "question": "Does a purchase refund count against the minimum payment due?",
+    "expected_answer": "While a refunded purchase will reduce a customer's remaining statement balance, it will not count towards the minimum due payment - with one exception:if there is only one purchase during the cycle, and this purchase is refunded to bring the statement balance to zero, there will be no minimum payment for that cycle.",
+    "source": "aven.com/support",
+    "agent_answer": "**No**, a refunded purchase will reduce a customer's remaining statement balance, but it will not count towards the minimum due payment.",
+    "accuracy_score": 0,
+    "helpfulness_score": 1,
+    "citation_score": 0
+  },
+  {
+    "question": "Would the effective interest rate stay the same for fixed monthly payment plans?",
+    "expected_answer": "The effective interest rate may vary for fixed monthly payment plans. On the day a cardholder sets up a fixed monthly payment plan, the rate is calculated as the account's current variable rate + a Fixed Rate premium (For some Aven cardholders, it may vary, see your account agreement).",
+    "source": "aven.com/support",
+    "agent_answer": "**I'm not sure about that**\n\nFor further assistance, please contact support@aven.com or visit [https://www.aven.com/call](https://www.aven.com/call).",
+    "accuracy_score": 0,
+    "helpfulness_score": 0,
+    "citation_score": 0
+  },
+  {
+    "question": "Does Aven offer a fixed rate?",
+    "expected_answer": "Some Aven cardholders may be able to create fixed payment, fixed rate Simple Loan plans. Applicants can check their details in their account agreement.",
+    "source": "aven.com/support",
+    "agent_answer": "Some Aven cardholders may be able to create fixed payment, fixed rate Simple Loan plans. Applicants can check their details in their account agreement.",
+    "accuracy_score": 1,
+    "helpfulness_score": 1,
+    "citation_score": 0
+  },
+  {
+    "question": "How can someone get a lower rate compared to the offered?",
+    "expected_answer": "Aven's bank-standard underwriting system is fully automated,\u00a0 offers based on applicants\u2019 income, equity, credit, and debt obligations. Aven can not adjust offers.",
+    "source": "aven.com/support",
+    "agent_answer": "Aven's bank-standard underwriting system is fully automated and offers are based on applicants' income, equity, credit, and debt obligations. Aven cannot adjust offers.",
+    "accuracy_score": 1,
+    "helpfulness_score": 1,
+    "citation_score": 0
+  }
+]
