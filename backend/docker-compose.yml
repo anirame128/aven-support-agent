@@ -1,0 +1,11 @@
+services:
+  aven-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: aven-backend
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    restart: unless-stopped 

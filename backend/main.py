@@ -1,10 +1,13 @@
 import os, json
 from dotenv import load_dotenv
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pinecone import Pinecone
-import openai as OpenRouterClient
-import re
+import openai
+from openai import OpenAI
+import time
+import io
 
 load_dotenv()
 
@@ -12,10 +15,9 @@ load_dotenv()
 pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
 index = pc.Index(os.getenv("PINECONE_INDEX_NAME"))
 
-# Initialize OpenRouter chat client
-chat_client = OpenRouterClient.OpenAI(
-    api_key=os.getenv("OPENROUTER_API_KEY"),
-    base_url="https://openrouter.ai/api/v1"
+# Initialize OpenAI client
+client = OpenAI(
+    api_key=os.getenv("OPENAI_API_KEY"),  # Make sure to add this to your .env file
 )
 
 app = FastAPI()
@@ -53,54 +55,194 @@ def lines_to_markdown_bullets(text):
     return '\n'.join(new_lines)
 
 def run_rag_pipeline(question):
-    question = question.strip()[:1000]
+    question = question.strip()
+    
+    t0 = time.time()
     res = index.search(
         namespace="__default__",
         query={"inputs": {"text": question}, "top_k": 10}
     )
+    pinecone_time = time.time() - t0
+
     matches = res.result["hits"]
     if not matches:
-        return "I'm not sure about that. Please reach out to Aven's support team for more help.", []
+        return {
+            "answer": "I'm not sure about that. Please reach out to Aven's support team for more help.",
+            "sources": [],
+            "latency_ms": int(pinecone_time * 1000)
+        }
+
     context = "\n---\n".join(
-        hit["fields"]["text"] for hit in matches if "text" in hit["fields"] and hit["fields"]["text"].strip()
+        hit["fields"]["text"] for hit in matches
+        if "text" in hit["fields"] and hit["fields"]["text"].strip()
     )
+
     if "aven.com" not in context:
         context += "\n\nYou can apply for an Aven card at https://www.aven.com."
+
     prompt = (
-        "You are Aven's helpful, accurate, and friendly support assistant.\n\n"
-        "Use ONLY the information below to answer the user's question.\n"
-        "If the answer is not there, say 'I'm not sure about that' or 'I don't have that information right now'—do NOT make anything up.\n\n"
-        "When responding:\n"
-        "- Format your answer using markdown:\n"
-        "  - Use **bold** section titles\n"
-        "  - Use bullet points (start each item with '-') or numbered lists (start with '1.') for details\n"
-        "  - Add inline [links](https://example.com) when URLs are available\n"
-        "  - Keep tone friendly, clear, and helpful\n"
-        "- When listing requirements or steps, ALWAYS use markdown list syntax (not just line breaks). For example:\n"
-        "  - Correct: '- Be a U.S. resident' or '1. Go to the website'\n"
-        "  - Incorrect: 'Be a U.S. resident' (no dash)\n"
-        "- Do NOT repeat the question or include a header like 'Based on the context'\n"
-        "- Do NOT mention the word 'context' or refer to where the info came from\n\n"
+        "You are Aven's friendly and accurate support assistant. Only answer using the information provided below. "
+        "If the answer isn't there, say 'I'm not sure about that' — don't make anything up.\n\n"
+        "**Instructions:**\n"
+        "- Use markdown (e.g., **bold**, - bullet points)\n"
+        "- Be clear, helpful, and concise\n"
+        "- Don't repeat the question or mention the source/context\n\n"
         f"Information:\n{context}\n\n"
         f"User Question: {question}\n\n"
         "Answer:"
     )
-    chat_res = chat_client.chat.completions.create(
-        model="moonshotai/kimi-k2:free",  # Cheaper alternative
-        messages=[{"role":"user", "content": prompt}],
+
+    t1 = time.time()
+    chat_res = client.chat.completions.create(
+        model="gpt-3.5-turbo",  # Fast and cost-effective, or use "gpt-4" for better quality
+        messages=[{"role": "user", "content": prompt}],
         temperature=0.2,
+        max_tokens=500,  # Optional: limit response length to control costs
     )
+    llm_time = time.time() - t1
+
     answer = chat_res.choices[0].message.content.strip()
     answer = lines_to_markdown_bullets(answer)
     sources = list({s for s in (hit["fields"].get("source") for hit in matches) if s})
-    return answer, sources
+
+    return {
+        "answer": answer,
+        "sources": sources,
+        "latency_ms": int((time.time() - t0) * 1000),  # ⏱ Total latency
+        "details": {
+            "pinecone_ms": int(pinecone_time * 1000),
+            "llm_ms": int(llm_time * 1000)
+        }
+    }
 
 @app.post("/ask")
 async def ask_question(req: Request):
     question = (await req.json()).get("question")
     if not question:
         return {"error": "No question provided."}
-    answer, sources = run_rag_pipeline(question)
-    return {"answer": answer, "sources": sources}
+    result = run_rag_pipeline(question)
+    return result
 
+@app.post("/stt")
+async def speech_to_text(audio: UploadFile = File(...)):
+    """Convert speech to text using OpenAI's Whisper model"""
+    try:
+        # Read the audio file
+        audio_data = await audio.read()
+        
+        # Create a file-like object
+        audio_file = io.BytesIO(audio_data)
+        audio_file.name = "audio.webm"  # Set a filename for OpenAI API
+        
+        # Use OpenAI's speech-to-text API
+        transcript = client.audio.transcriptions.create(
+            model="whisper-1",
+            file=audio_file,
+            response_format="text"
+        )
+        
+        return {"transcript": transcript}
+        
+    except Exception as e:
+        print(f"STT Error: {e}")
+        return {"error": "Failed to transcribe audio", "details": str(e)}
 
+@app.post("/voice-ask")
+async def voice_ask(audio: UploadFile = File(...)):
+    """Complete voice-to-voice pipeline: STT -> RAG -> TTS"""
+    try:
+        # Step 1: Speech to Text
+        audio_data = await audio.read()
+        audio_file = io.BytesIO(audio_data)
+        audio_file.name = "audio.webm"
+        
+        transcript = client.audio.transcriptions.create(
+            model="whisper-1",
+            file=audio_file,
+            response_format="text"
+        )
+        
+        # Step 2: Get answer from RAG pipeline
+        result = run_rag_pipeline(transcript)
+        answer = result["answer"]
+        
+        # Step 3: Text to Speech
+        # Clean the answer for speech (remove markdown)
+        clean_answer = answer.replace("**", "").replace("*", "").replace("- ", "").replace("#", "")
+        
+        tts_response = client.audio.speech.create(
+            model="tts-1",
+            voice="alloy",  # Can be: alloy, echo, fable, onyx, nova, shimmer
+            input=clean_answer,
+            response_format="mp3"
+        )
+        
+        # Return JSON response with audio data and metadata
+        import base64
+        audio_base64 = base64.b64encode(tts_response.content).decode('utf-8')
+        
+        return {
+            "transcript": transcript,
+            "answer": answer,
+            "sources": result.get("sources", []),
+            "audio_data": audio_base64,
+            "audio_format": "mp3"
+        }
+        
+    except Exception as e:
+        print(f"Voice Ask Error: {e}")
+        return {"error": "Failed to process voice request", "details": str(e)}
+
+@app.post("/tts")
+async def text_to_speech(req: Request):
+    """Convert text to speech using OpenAI's TTS API"""
+    try:
+        body = await req.json()
+        text = body.get("text", "").strip()
+        voice = body.get("voice", "alloy")  # Default voice
+        
+        if not text:
+            return {"error": "No text provided"}
+        
+        # Clean text for speech (remove markdown formatting)
+        clean_text = text.replace("**", "").replace("*", "").replace("- ", "").replace("#", "")
+        
+        response = client.audio.speech.create(
+            model="tts-1",
+            voice=voice,
+            input=clean_text,
+            response_format="mp3"
+        )
+        
+        return StreamingResponse(
+            io.BytesIO(response.content),
+            media_type="audio/mpeg",
+            headers={"Content-Disposition": "attachment; filename=speech.mp3"}
+        )
+        
+    except Exception as e:
+        print(f"TTS Error: {e}")
+        return {"error": "Failed to convert text to speech", "details": str(e)}
+
+@app.post("/rag_query")
+async def rag_query(req: Request):
+    body = await req.json()
+    question = body.get("question", "").strip()
+    if not question:
+        return {"context": "", "sources": []}
+
+    res = index.search(
+        namespace="__default__",
+        query={"inputs": {"text": question}, "top_k": 10}
+    )
+    matches = res.result["hits"]
+    if not matches:
+        return {"context": "", "sources": []}
+
+    context = "\n---\n".join(
+        hit["fields"]["text"] for hit in matches
+        if "text" in hit["fields"] and hit["fields"]["text"].strip()
+    )
+    sources = list({hit["fields"].get("source") for hit in matches if hit["fields"].get("source")})
+
+    return {"context": context, "sources": sources}

@@ -1,0 +1,419 @@
+/* Navbar Container */
+.component-navbar {
+  position: relative;
+  z-index: 1000;
+}
+
+.nav-container {
+  position: relative;
+}
+
+/* Main Navigation */
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem 0;
+  background-color: white;
+  box-shadow: none;
+  border: none;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-left: 2rem;
+  padding-right: 2rem;
+}
+
+.nav.tw-bg-white {
+  background-color: white;
+}
+
+/* Left section - Logo */
+.left {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: inherit;
+  border: none;
+  font-weight: 700;
+  font-size: 1.5rem;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.logo {
+  height: 27px;
+  width: auto;
+}
+
+/* Middle section - Navigation links */
+.middle {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  justify-content: center;
+}
+
+.middle ul {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 2.5rem;
+  align-items: center;
+}
+
+.middle li {
+  position: relative;
+}
+
+.nav-item {
+  text-decoration: none;
+  color: #000;
+  font-weight: 500;
+  font-size: 0.95rem;
+  padding: 0;
+  transition: color 0.2s ease;
+  background: none;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  letter-spacing: 0.01em;
+}
+
+.nav-item:hover {
+  color: #333;
+}
+
+.nav-item.active {
+  color: #333;
+}
+
+/* Dropdown */
+.has-dropdown {
+  position: relative;
+}
+
+.dropdown-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  border: none;
+  outline: none;
+  background: none;
+  font-weight: 500;
+  font-size: 0.95rem;
+  color: #000;
+  cursor: pointer;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  letter-spacing: 0.01em;
+}
+
+.dropdown-toggle::after {
+  content: '▼';
+  font-size: 0.6rem;
+  transition: transform 0.2s ease;
+  margin-left: 0.25rem;
+}
+
+.dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: white;
+  border: none;
+  border-radius: 4px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  min-width: 150px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.2s ease;
+  z-index: 1001;
+  margin-top: 0.5rem;
+  padding: 0.5rem 0;
+}
+
+.dropdown.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.dropdownLink {
+  display: block;
+  padding: 0.75rem 1rem;
+  text-decoration: none;
+  color: #333;
+  transition: background-color 0.2s ease;
+  font-size: 0.9rem;
+  font-weight: 500;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.dropdownLink:hover {
+  background-color: #f8f9fa;
+  color: #000;
+}
+
+/* Right section */
+.right {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.right ul {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 1rem;
+}
+
+.right .nav-item {
+  font-weight: 500;
+  font-size: 0.95rem;
+  color: #000;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  letter-spacing: 0.01em;
+}
+
+/* Hamburger menu */
+.component-hamburger {
+  display: none;
+}
+
+.hamburger {
+  background: none;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 30px;
+  height: 30px;
+}
+
+.hamburger-box {
+  width: 20px;
+  height: 16px;
+  position: relative;
+}
+
+.hamburger-inner {
+  width: 100%;
+  height: 2px;
+  background-color: #333;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  transition: all 0.3s ease;
+}
+
+.hamburger-inner::before,
+.hamburger-inner::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 2px;
+  background-color: #333;
+  transition: all 0.3s ease;
+}
+
+.hamburger-inner::before {
+  top: -6px;
+}
+
+.hamburger-inner::after {
+  bottom: -6px;
+}
+
+/* Mobile navigation */
+.mobile-nav {
+  display: none;
+  background: white;
+  border-top: none;
+  padding: 1rem 0;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  transform: translateY(-100%);
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.mobile-nav.show {
+  transform: translateY(0);
+  opacity: 1;
+  visibility: visible;
+}
+
+.mobile-nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.mobile-nav li {
+  border-bottom: none;
+}
+
+.mobile-nav .nav-item {
+  display: block;
+  padding: 1rem 1.5rem;
+  text-decoration: none;
+  color: #333;
+  font-weight: 500;
+  border: none;
+  font-size: 0.95rem;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.mobile-nav .nav-item:hover {
+  background-color: #f8f9fa;
+}
+
+/* Sticky navigation */
+.nav.sticky {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  box-shadow: none;
+  border: none;
+  z-index: 1000;
+  display: none;
+}
+
+.nav.sticky.show {
+  display: block;
+}
+
+.nav.sticky .container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 0;
+}
+
+.nav.sticky .left {
+  display: flex;
+  align-items: center;
+}
+
+.nav.sticky .right {
+  display: flex;
+  align-items: center;
+}
+
+/* Button styles */
+.btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 50px;
+  font-weight: bold;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.btn.nav-link {
+  background-color: #333;
+  color: white;
+}
+
+.btn.nav-link:hover {
+  background-color: #555;
+}
+
+/* Responsive design */
+@media (max-width: 991px) {
+  .middle {
+    display: none;
+  }
+  
+  .component-hamburger {
+    display: block;
+  }
+  
+  .d-none.d-lg-block {
+    display: none !important;
+  }
+  
+  .d-block.d-lg-none {
+    display: block !important;
+  }
+  
+  .nav {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+@media (min-width: 992px) {
+  .d-none.d-lg-block {
+    display: block !important;
+  }
+  
+  .d-block.d-lg-none {
+    display: none !important;
+  }
+  
+  .mobile-nav {
+    display: none !important;
+  }
+}
+
+/* Container utilities */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.d-flex {
+  display: flex;
+}
+
+/* Utility classes */
+.ps-3 {
+  padding-left: 1rem;
+}
+
+.pe-3 {
+  padding-right: 1rem;
+}
+
+.ms-3 {
+  margin-left: 1rem;
+}
+
+.text-white {
+  color: white;
+}
+
+.fw-bold {
+  font-weight: bold;
+}
+
+.bg-dark {
+  background-color: #333;
+}
+
+.rounded-pill {
+  border-radius: 50px;
+} 

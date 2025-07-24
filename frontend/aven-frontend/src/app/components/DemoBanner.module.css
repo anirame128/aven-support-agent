@@ -1,0 +1,38 @@
+.banner {
+  width: 100%;
+  background: #111;
+  color: #fff;
+  padding: 0.75rem 1.5rem;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 2000;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.close {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0 0.5rem;
+  line-height: 1;
+  z-index: 10;
+}
+.close:focus {
+  outline: 2px solid #fff;
+}
+@media (max-width: 600px) {
+  .banner {
+    font-size: 0.95rem;
+    padding: 0.5rem 0.5rem;
+  }
+} 
