@@ -259,7 +259,7 @@ export default function SupportPage() {
                         ) : (
                           msg.content
                         )}
-                        {msg.sources && msg.sources.length > 0 && (
+                        {msg.sources && msg.sources.length > 0 && !msg.content.includes("I'm not sure about that") && (
                           <div className={styles.sources}>
                             Sources: {msg.sources.filter(Boolean).map((src, j) => (
                               <a 

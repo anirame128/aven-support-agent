@@ -65,6 +65,19 @@ def run_rag_pipeline(question):
     pinecone_time = time.time() - t0
 
     matches = res.result["hits"]
+    # Custom logic for join/apply/link questions
+    join_keywords = [
+        "join", "apply", "application", "sign up", "get a card", "get aven card", "link to join", "link to apply", "where is the link", "sign up now"
+    ]
+    lower_q = question.lower()
+    is_join_intent = any(k in lower_q for k in join_keywords)
+
+    if not matches and is_join_intent:
+        return {
+            "answer": "You can apply for an Aven card at [https://www.aven.com](https://www.aven.com).",
+            "sources": ["https://www.aven.com"],
+            "latency_ms": int(pinecone_time * 1000)
+        }
     if not matches:
         return {
             "answer": "I'm not sure about that. Please reach out to Aven's support team for more help.",
@@ -104,6 +117,14 @@ def run_rag_pipeline(question):
     answer = chat_res.choices[0].message.content.strip()
     answer = lines_to_markdown_bullets(answer)
     sources = list({s for s in (hit["fields"].get("source") for hit in matches) if s})
+
+    # If the LLM still says "I'm not sure about that" and it's a join/apply question, override the answer
+    if is_join_intent and "i'm not sure about that" in answer.lower():
+        return {
+            "answer": "You can apply for an Aven card at [https://www.aven.com](https://www.aven.com).",
+            "sources": ["https://www.aven.com"],
+            "latency_ms": int((time.time() - t0) * 1000)
+        }
 
     return {
         "answer": answer,
