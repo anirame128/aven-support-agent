@@ -5,11 +5,14 @@ from googleapiclient.discovery import build
 import pytz
 import os
 from google.oauth2.credentials import Credentials
+from typing import Optional
 
 class ScheduleRequest(BaseModel):
     name: str
     email: str
     datetime: str  # ISO format, e.g., "2025-07-25T15:00:00-05:00"
+    phone: Optional[str] = None
+    notes: Optional[str] = None
 
 SCOPES = ["https://www.googleapis.com/auth/calendar"]
 
@@ -38,18 +41,15 @@ def schedule_support_event(req: ScheduleRequest):
         calendar_id = "primary"
 
         # Prepare details for description
-        phone = getattr(req, 'phone', 'N/A')
-        notes = getattr(req, 'notes', 'None')
+        desc = f"Scheduled via the AI assistant.\nName: {req.name}\nEmail: {req.email}"
+        if req.phone:
+            desc += f"\nPhone: {req.phone}"
+        if req.notes:
+            desc += f"\nNotes: {req.notes}"
 
         event = {
             "summary": "Support Call with Aven Agent",
-            "description": (
-                f"Scheduled via the AI assistant.\n"
-                f"Name: {req.name}\n"
-                f"Email: {req.email}\n"
-                f"Phone: {phone}\n"
-                f"Notes: {notes}"
-            ),
+            "description": desc,
             "start": {
                 "dateTime": start_time.isoformat(),
                 "timeZone": "America/Chicago",

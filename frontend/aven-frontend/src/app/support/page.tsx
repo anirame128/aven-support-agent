@@ -217,8 +217,8 @@ export default function SupportPage() {
             name: scheduleState.name,
             email: scheduleState.email,
             datetime: scheduleState.selectedTime,
-            phone: scheduleState.phone,
-            notes: scheduleState.notes
+            phone: scheduleState.phone || "",
+            notes: scheduleState.notes || ""
           }),
         });
         setMessages(msgs => [
