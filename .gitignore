@@ -226,3 +226,5 @@ yarn-error.log*
 out/
 
 client_google_auth.json
+
+client_secret.json

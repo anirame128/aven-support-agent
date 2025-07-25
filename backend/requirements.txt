@@ -40,3 +40,5 @@ pinecone
 python-multipart
 google-api-python-client
 google-auth
+pytz
+google_auth_oauthlib

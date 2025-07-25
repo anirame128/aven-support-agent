@@ -5,8 +5,6 @@ from googleapiclient.discovery import build
 import pytz
 import os
 from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
-from google.auth.transport.requests import Request
 
 class ScheduleRequest(BaseModel):
     name: str
@@ -15,9 +13,16 @@ class ScheduleRequest(BaseModel):
 
 SCOPES = ["https://www.googleapis.com/auth/calendar"]
 
-# Helper for local OAuth
-
-# Remove local OAuth logic and always use default credentials
+def get_oauth_credentials():
+    creds = Credentials(
+        None,
+        refresh_token=os.environ["GOOGLE_REFRESH_TOKEN"],
+        token_uri="https://oauth2.googleapis.com/token",
+        client_id=os.environ["GOOGLE_CLIENT_ID"],
+        client_secret=os.environ["GOOGLE_CLIENT_SECRET"],
+        scopes=SCOPES,
+    )
+    return creds
 
 def schedule_support_event(req: ScheduleRequest):
     try:
@@ -25,16 +30,26 @@ def schedule_support_event(req: ScheduleRequest):
         start_time = datetime.fromisoformat(req.datetime)
         end_time = start_time + timedelta(minutes=30)
 
-        # Always use default credentials
-        credentials, _ = default(scopes=["https://www.googleapis.com/auth/calendar"])
+        # Use OAuth2 credentials from environment
+        credentials = get_oauth_credentials()
         service = build("calendar", "v3", credentials=credentials)
 
         # Use primary calendar (or your shared calendar's email if needed)
         calendar_id = "primary"
 
+        # Prepare details for description
+        phone = getattr(req, 'phone', 'N/A')
+        notes = getattr(req, 'notes', 'None')
+
         event = {
             "summary": "Support Call with Aven Agent",
-            "description": f"Scheduled via the AI assistant for {req.name}.",
+            "description": (
+                f"Scheduled via the AI assistant.\n"
+                f"Name: {req.name}\n"
+                f"Email: {req.email}\n"
+                f"Phone: {phone}\n"
+                f"Notes: {notes}"
+            ),
             "start": {
                 "dateTime": start_time.isoformat(),
                 "timeZone": "America/Chicago",
@@ -43,7 +58,7 @@ def schedule_support_event(req: ScheduleRequest):
                 "dateTime": end_time.isoformat(),
                 "timeZone": "America/Chicago",
             },
-            "attendees": [{"email": req.email}],
+            "attendees": [{"email": req.email, "displayName": req.name}],
             "reminders": {"useDefault": True},
         }
 
@@ -73,8 +88,8 @@ def get_available_times():
         slot_minutes = 30
         available_slots = []
 
-        # Always use default credentials
-        credentials, _ = default(scopes=["https://www.googleapis.com/auth/calendar"])
+        # Use OAuth2 credentials from environment
+        credentials = get_oauth_credentials()
         service = build("calendar", "v3", credentials=credentials)
         calendar_id = "primary"
 
