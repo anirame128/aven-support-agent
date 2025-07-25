@@ -38,3 +38,5 @@ zstandard==0.23.0
 dotenv
 pinecone
 python-multipart
+google-api-python-client
+google-auth

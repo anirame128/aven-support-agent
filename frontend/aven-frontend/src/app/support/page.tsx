@@ -10,6 +10,18 @@ type Message = {
   sources?: string[];
 };
 
+// Add ScheduleState type
+
+type ScheduleState = {
+  active: boolean;
+  stage: "offered" | "selecting-time" | "collecting-info" | "confirming" | "done" | "cancelled";
+  selectedTime?: string;
+  name?: string;
+  email?: string;
+  phone?: string;
+  notes?: string;
+};
+
 export default function SupportPage() {
   const [messages, setMessages] = useState<Message[]>([
     { role: "assistant", content: "Hi! Ask me anything about Aven." }
@@ -24,6 +36,7 @@ export default function SupportPage() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [scheduleState, setScheduleState] = useState<ScheduleState | null>(null);
   
   // Check microphone support
   useEffect(() => {
@@ -42,49 +55,207 @@ export default function SupportPage() {
   // Helper to get backend API URL
   const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
 
+  // Helper: parse yes/no
+  const isYes = (msg: string) => /^(yes|yep|sure|ok|yeah|y)$/i.test(msg.trim());
+  const isNo = (msg: string) => /^(no|nope|nah|n)$/i.test(msg.trim());
+
+  // Helper: parse email
+  const isEmail = (str: string) => /\S+@\S+\.\S+/.test(str);
+  // Helper: parse phone
+  const isPhone = (str: string) => /\d{3}[\s-]?\d{3}[\s-]?\d{4}/.test(str);
+
   // Text chat handler
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
-    
+
+    // Scheduling flow interception
+    if (scheduleState && scheduleState.active) {
+      await handleSchedulingFlow(input.trim());
+      setInput("");
+      return;
+    }
+
     const userMsg: Message = { role: "user", content: input };
     setMessages((msgs) => [...msgs, userMsg]);
     setInput("");
     setLoading(true);
-    
+
     try {
       const res = await fetch(`${API_URL}/ask`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question: input })
       });
-      
-      if (!res.ok) {
-        throw new Error(`HTTP error! status: ${res.status}`);
-      }
-      
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
       const data = await res.json();
       setMessages((msgs) => [
         ...msgs,
-        { 
-          role: "assistant", 
-          content: data.answer, 
-          sources: data.sources 
+        {
+          role: "assistant",
+          content: data.answer,
+          sources: data.sources
         } as Message
       ]);
+      // Scheduling trigger
+      if (data.trigger_schedule) {
+        setScheduleState({ active: true, stage: "offered" });
+      }
     } catch (err) {
       console.error('Error sending message:', err);
       setMessages((msgs) => [
         ...msgs,
-        { 
-          role: "assistant", 
-          content: "Sorry, there was an error connecting to the server." 
+        {
+          role: "assistant",
+          content: "Sorry, there was an error connecting to the server."
         } as Message
       ]);
     }
-    
     setLoading(false);
   };
+
+  // Scheduling flow handler
+  const handleSchedulingFlow = async (userInput: string) => {
+    // Step through the stages
+    if (!scheduleState) return;
+    if (scheduleState.stage === "offered") {
+      if (isYes(userInput)) {
+        // Fetch available times
+        setMessages(msgs => [
+          ...msgs,
+          { role: "assistant", content: "Fetching available times..." }
+        ]);
+        const times = await fetch(`${API_URL}/available-times`).then(res => res.json());
+        setScheduleState({ ...scheduleState, stage: "selecting-time" });
+        setMessages(msgs => [
+          ...msgs,
+          {
+            role: "assistant",
+            content: `Here are some available times:\n\n${(times.available_times || []).slice(0, 5).map((t: string) => `- ${new Date(t).toLocaleString()}`).join('\n')}\n\nPlease reply with your preferred time.`
+          }
+        ]);
+      } else if (isNo(userInput)) {
+        setMessages(msgs => [
+          ...msgs,
+          { role: "assistant", content: "No problem! If you change your mind, just let me know." }
+        ]);
+        setScheduleState(null);
+      } else {
+        setMessages(msgs => [
+          ...msgs,
+          { role: "assistant", content: "Would you like me to help you schedule a call with Aven's support team? (Yes or No)" }
+        ]);
+      }
+    } else if (scheduleState.stage === "selecting-time") {
+      // Try to parse a valid ISO time from user input
+      const times = await fetch(`${API_URL}/available-times`).then(res => res.json());
+      const allTimes: string[] = times.available_times || [];
+      let selectedISO = allTimes.find(t => {
+        const local = new Date(t).toLocaleString().toLowerCase();
+        return userInput.toLowerCase().includes(local.toLowerCase());
+      });
+      if (!selectedISO) {
+        // Try direct ISO match
+        selectedISO = allTimes.find(t => userInput.includes(t));
+      }
+      if (!selectedISO) {
+        setMessages(msgs => [
+          ...msgs,
+          { role: "assistant", content: "Sorry, I couldn't match that to an available time. Please copy-paste or re-type your preferred time from the list above." }
+        ]);
+        return;
+      }
+      setScheduleState(prev => ({ ...prev!, stage: "collecting-info", selectedTime: selectedISO }));
+      setMessages(msgs => [
+        ...msgs,
+        {
+          role: "assistant",
+          content: "Great! Please provide the following details:\n\n- Full Name\n- Email\n- Phone Number\n- Any additional notes (optional)\n\nYou can send all at once or one by one."
+        }
+      ]);
+    } else if (scheduleState.stage === "collecting-info") {
+      // Parse info
+      let { name, email, phone, notes } = scheduleState;
+      const lines = userInput.split(/\n|,|;/).map(l => l.trim());
+      for (const line of lines) {
+        if (!name && line.split(' ').length >= 2 && !isEmail(line) && !isPhone(line)) name = line;
+        if (!email && isEmail(line)) email = line;
+        if (!phone && isPhone(line)) phone = line;
+        if (!notes && line.toLowerCase().includes('note')) notes = line;
+      }
+      // Fallback: try to parse all at once
+      if (!name && !email && !phone && lines.length === 3) {
+        [name, email, phone] = lines;
+      }
+      setScheduleState(prev => ({ ...prev!, name, email, phone, notes }));
+      if (name && email && phone) {
+        setScheduleState(prev => ({ ...prev!, stage: "confirming" }));
+        setMessages(msgs => [
+          ...msgs,
+          {
+            role: "assistant",
+            content: `Just to confirm:\n\n- Time: ${new Date(scheduleState.selectedTime!).toLocaleString()}\n- Name: ${name}\n- Email: ${email}\n- Phone: ${phone}\n- Notes: ${notes || "None"}\n\nShould I go ahead and schedule this? (Yes/No)`
+          }
+        ]);
+      } else {
+        setMessages(msgs => [
+          ...msgs,
+          { role: "assistant", content: `Missing info. Please provide your${!name ? ' name,' : ''}${!email ? ' email,' : ''}${!phone ? ' phone,' : ''}`.replace(/,$/, ".") }
+        ]);
+      }
+    } else if (scheduleState.stage === "confirming") {
+      if (isYes(userInput)) {
+        // Schedule the call
+        setMessages(msgs => [
+          ...msgs,
+          { role: "assistant", content: "Scheduling your call..." }
+        ]);
+        await fetch(`${API_URL}/schedule-support-call`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: scheduleState.name,
+            email: scheduleState.email,
+            datetime: scheduleState.selectedTime,
+            phone: scheduleState.phone,
+            notes: scheduleState.notes
+          }),
+        });
+        setMessages(msgs => [
+          ...msgs,
+          {
+            role: "assistant",
+            content: "✅ Your call is scheduled! An email has been sent to your inbox. Is there anything else I can help with?"
+          }
+        ]);
+        setScheduleState(null);
+      } else if (isNo(userInput)) {
+        setMessages(msgs => [
+          ...msgs,
+          { role: "assistant", content: "No problem! If you change your mind, just let me know." }
+        ]);
+        setScheduleState(null);
+      } else {
+        setMessages(msgs => [
+          ...msgs,
+          { role: "assistant", content: "Should I go ahead and schedule this? (Yes/No)" }
+        ]);
+      }
+    }
+  };
+
+  // Scheduling flow: offer prompt when triggered
+  useEffect(() => {
+    if (scheduleState?.stage === "offered") {
+      setMessages(msgs => [
+        ...msgs,
+        {
+          role: "assistant",
+          content: "Would you like me to help you schedule a call with Aven's support team? (Yes or No)"
+        }
+      ]);
+    }
+  }, [scheduleState?.stage]);
 
   // Start voice recording using MediaRecorder
   const startRecording = async () => {

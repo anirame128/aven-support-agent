@@ -224,3 +224,5 @@ yarn-error.log*
 
 # Frontend build
 out/
+
+client_google_auth.json

@@ -1,14 +1,14 @@
-import os, json
+import os
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pinecone import Pinecone
-import openai
 from openai import OpenAI
 import time
 import io
-from guardrails import check_guardrails
+from llm_moderation.guardrails import check_guardrails
+from scheduling_tool.google_calendar import ScheduleRequest, schedule_support_event, get_available_times
 
 load_dotenv()
 
@@ -83,7 +83,8 @@ def run_rag_pipeline(question):
         return {
             "answer": "I'm not sure about that. Please reach out to Aven's support team for more help.",
             "sources": [],
-            "latency_ms": int(pinecone_time * 1000)
+            "latency_ms": int(pinecone_time * 1000),
+            "trigger_schedule": True
         }
 
     context = "\n---\n".join(
@@ -130,6 +131,16 @@ def run_rag_pipeline(question):
     # If the LLM says "I'm not sure about that", direct to support
     if "i'm not sure about that" in answer.lower():
         answer += "\n\nFor further assistance, please contact support@aven.com or visit [https://www.aven.com/call](https://www.aven.com/call)."
+        return {
+            "answer": answer,
+            "sources": sources,
+            "latency_ms": int((time.time() - t0) * 1000),
+            "details": {
+                "pinecone_ms": int(pinecone_time * 1000),
+                "llm_ms": int(llm_time * 1000)
+            },
+            "trigger_schedule": True
+        }
 
     return {
         "answer": answer,
@@ -284,3 +295,11 @@ async def rag_query(req: Request):
     sources = list({hit["fields"].get("source") for hit in matches if hit["fields"].get("source")})
 
     return {"context": context, "sources": sources}
+
+@app.post("/schedule-support-call")
+async def schedule_support_call(req: ScheduleRequest):
+    return schedule_support_event(req)
+
+@app.get("/available-times")
+async def available_times():
+    return get_available_times()
