@@ -109,7 +109,7 @@ export default function Navbar() {
           <div className={styles.right}>
             <div className={`${styles['component-hamburger']} ${styles['d-block']} ${styles['d-lg-none']}`}>
               <button 
-                className={`${styles.hamburger} ${styles['navbar-toggler']}`}
+                className={`${styles.hamburger} ${styles['navbar-toggler']} ${isMobileMenuOpen ? styles.active : ''}`}
                 type="button" 
                 onClick={toggleMobileMenu}
                 aria-label="Toggle navigation"

@@ -76,18 +76,21 @@
   color: #000;
   font-weight: 500;
   font-size: 0.95rem;
-  padding: 0;
-  transition: color 0.2s ease;
+  padding: 1rem 1.5rem;
+  transition: all 0.2s ease;
   background: none;
   border: none;
   outline: none;
   cursor: pointer;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   letter-spacing: 0.01em;
+  border-radius: 6px;
 }
 
 .nav-item:hover {
   color: #333;
+  background-color: #f5f5f5;
+  box-shadow: none;
 }
 
 .nav-item.active {
@@ -237,12 +240,27 @@
   bottom: -6px;
 }
 
+/* Hamburger animation when menu is open */
+.hamburger.active .hamburger-inner {
+  background-color: transparent;
+}
+
+.hamburger.active .hamburger-inner::before {
+  top: 0;
+  transform: rotate(45deg);
+}
+
+.hamburger.active .hamburger-inner::after {
+  bottom: 0;
+  transform: rotate(-45deg);
+}
+
 /* Mobile navigation */
 .mobile-nav {
-  display: none;
+  display: block;
   background: white;
-  border-top: none;
-  padding: 1rem 0;
+  border-top: 1px solid #e9ecef;
+  padding: 0;
   position: absolute;
   top: 100%;
   left: 0;
@@ -252,6 +270,7 @@
   opacity: 0;
   visibility: hidden;
   transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .mobile-nav.show {
@@ -267,22 +286,35 @@
 }
 
 .mobile-nav li {
+  border-bottom: 1px solid #f8f9fa;
+}
+
+.mobile-nav li:last-child {
   border-bottom: none;
 }
 
 .mobile-nav .nav-item {
   display: block;
-  padding: 1rem 1.5rem;
+  padding: 1rem 2rem;
   text-decoration: none;
   color: #333;
   font-weight: 500;
   border: none;
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  transition: background-color 0.2s ease;
+  width: 100%;
+  text-align: left;
+  background: none;
+  cursor: pointer;
 }
 
 .mobile-nav .nav-item:hover {
   background-color: #f8f9fa;
+}
+
+.mobile-nav .nav-item:active {
+  background-color: #e9ecef;
 }
 
 /* Sticky navigation */

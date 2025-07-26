@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from fastapi import FastAPI, Request, UploadFile, File
+from fastapi import FastAPI, Request, UploadFile, File, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pinecone import Pinecone
@@ -9,6 +9,7 @@ import time
 import io
 import hashlib
 import json
+import base64
 from functools import lru_cache
 from llm_moderation.guardrails import check_guardrails
 from scheduling_tool.google_calendar import ScheduleRequest, schedule_support_event, get_available_times
@@ -41,7 +42,10 @@ def cached_guardrails_check(text: str) -> dict:
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"]
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:3001", "http://127.0.0.1:3001"],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["*"]
 )
 
 @app.on_event("startup")
@@ -80,6 +84,18 @@ async def shutdown_event():
     response_cache.clear()
     print("✅ Cache cleared")
 
+def is_support_question(q: str) -> bool:
+    """Check if the question is asking for support/help that would warrant scheduling a call"""
+    support_keywords = [
+        "call", "contact", "help", "talk to someone", "representative",
+        "support", "agent", "can't find", "problem", "issue", "trouble",
+        "assistance", "speak to", "speak with", "get help", "need help",
+        "account", "payment", "billing", "charge", "transaction", "fraud",
+        "lost", "stolen", "damaged", "not working", "error", "failed"
+    ]
+    q_lower = q.lower()
+    return any(k in q_lower for k in support_keywords)
+
 def lines_to_markdown_bullets(text):
     import re
     lines = text.split('\n')
@@ -111,6 +127,15 @@ def lines_to_markdown_bullets(text):
 def run_rag_pipeline(question):
     question = question.strip()
     
+    # Validate input
+    if not question or len(question.strip()) < 3:
+        return {
+            "answer": "I couldn't understand your question. Please try asking again.",
+            "sources": [],
+            "latency_ms": 0,
+            "error": "Empty or too short question"
+        }
+    
     # Check cache first
     cache_key = get_cache_key(question)
     if cache_key in response_cache:
@@ -120,11 +145,20 @@ def run_rag_pipeline(question):
     
     t0 = time.time()
     
-    # Optimize: Use async search if possible, or implement connection pooling
-    res = index.search(
-        namespace="__default__",
-        query={"inputs": {"text": question}, "top_k": 10}
-    )
+    try:
+        # Optimize: Use async search if possible, or implement connection pooling
+        res = index.search(
+            namespace="__default__",
+            query={"inputs": {"text": question}, "top_k": 10}
+        )
+    except Exception as e:
+        print(f"Pinecone search error: {e}")
+        return {
+            "answer": "Sorry, I'm having trouble accessing the information right now. Please try again.",
+            "sources": [],
+            "latency_ms": int((time.time() - t0) * 1000),
+            "error": str(e)
+        }
     pinecone_time = time.time() - t0
 
     matches = res.result["hits"]
@@ -145,12 +179,18 @@ def run_rag_pipeline(question):
         return result
         
     if not matches:
+        # Only trigger schedule if it's a true support request
+        should_trigger_schedule = is_support_question(question)
+        
         result = {
             "answer": "I'm not sure about that. Please reach out to Aven's support team for more help.",
             "sources": [],
             "latency_ms": int(pinecone_time * 1000),
-            "trigger_schedule": True
+            "trigger_schedule": should_trigger_schedule
         }
+        
+        print(f"🤖 No matches found for: '{question}' - trigger_schedule: {should_trigger_schedule}")
+        
         response_cache[cache_key] = result
         return result
 
@@ -200,6 +240,10 @@ def run_rag_pipeline(question):
     # If the LLM says "I'm not sure about that", direct to support
     if "i'm not sure about that" in answer.lower():
         answer += "\n\nFor further assistance, please contact support@aven.com or visit [https://www.aven.com/call](https://www.aven.com/call)."
+        
+        # Only trigger schedule if it's a true support request
+        should_trigger_schedule = is_support_question(question)
+        
         result = {
             "answer": answer,
             "sources": sources,
@@ -208,8 +252,12 @@ def run_rag_pipeline(question):
                 "pinecone_ms": int(pinecone_time * 1000),
                 "llm_ms": int(llm_time * 1000)
             },
-            "trigger_schedule": True
+            "trigger_schedule": should_trigger_schedule
         }
+        
+        # Add logging to see why it keeps triggering
+        print(f"🤖 Final answer: {answer[:80]}... trigger_schedule: {should_trigger_schedule} (support_question: {is_support_question(question)})")
+        
         response_cache[cache_key] = result
         return result
 
@@ -227,7 +275,10 @@ def run_rag_pipeline(question):
 
 @app.post("/ask")
 async def ask_question(req: Request):
-    question = (await req.json()).get("question")
+    data = await req.json()
+    question = data.get("question")
+    schedule_state = data.get("schedule_state")
+    
     if not question:
         return {"error": "No question provided."}
     
@@ -242,7 +293,49 @@ async def ask_question(req: Request):
             "violations": violations
         }
     
+    # Check if we're in a scheduling flow
+    if schedule_state and schedule_state.get("active", False):
+        from scheduling_tool.google_calendar import continue_scheduling_flow
+        try:
+            print(f"🔄 Text scheduling flow - question: '{question}', state: {schedule_state}")
+            resp = continue_scheduling_flow(question, schedule_state)
+            print(f"📋 Text scheduling response: {resp}")
+            
+            if resp.get("error"):
+                answer = resp["error"]
+            else:
+                answer = resp["message"]
+            
+            result = {
+                "answer": answer,
+                "sources": [],
+                "schedule_state": resp.get("schedule_state", schedule_state) if not resp.get("done", False) else None
+            }
+            return result
+            
+        except Exception as e:
+            print(f"Text Scheduling Error: {e}")
+            return {
+                "answer": "Sorry, there was an error with scheduling. Let me help you another way.",
+                "sources": []
+            }
+    
+    # Normal RAG flow
     result = run_rag_pipeline(question)
+    
+    # If RAG says "trigger_schedule", we START the scheduling flow
+    if result.get("trigger_schedule"):
+        from scheduling_tool.google_calendar import start_scheduling_flow
+        try:
+            print(f"🚀 Starting text scheduling flow due to trigger_schedule")
+            sched = start_scheduling_flow()
+            result["answer"] = sched["message"]
+            result["schedule_state"] = sched.get("schedule_state")
+        except Exception as e:
+            print(f"Text Schedule Start Error: {e}")
+            # Fall back to normal RAG response
+            pass
+    
     return result
 
 @app.post("/stt")
@@ -270,50 +363,164 @@ async def speech_to_text(audio: UploadFile = File(...)):
         return {"error": "Failed to transcribe audio", "details": str(e)}
 
 @app.post("/voice-ask")
-async def voice_ask(audio: UploadFile = File(...)):
-    """Complete voice-to-voice pipeline: STT -> RAG -> TTS"""
-    try:
-        # Step 1: Speech to Text
-        audio_data = await audio.read()
-        audio_file = io.BytesIO(audio_data)
+async def voice_ask(
+    background_tasks: BackgroundTasks,
+    request: Request,
+    audio: UploadFile = File(...)
+):
+    """
+    STT ➜ RAG ➜ decide if we need to schedule
+    If `schedule_state` exists we continue the voice scheduling flow,
+    otherwise we fall back to plain RAG (+TTS).
+    """
+    # ---------- helpers ----------
+    def _audio_to_text(blob: bytes) -> str:
+        audio_file = io.BytesIO(blob)
         audio_file.name = "audio.webm"
-        
-        transcript = client.audio.transcriptions.create(
+        return client.audio.transcriptions.create(
             model="whisper-1",
             file=audio_file,
-            response_format="text"
+            response_format="text",
+            language="en"  # Specify language for faster processing
         )
+
+    def _text_to_audio(text: str) -> bytes:
+        try:
+            clean = text.replace("**", "").replace("*", "").replace("- ", "").replace("#", "")
+            print(f"🔊 TTS input: '{clean}'")
+            response = client.audio.speech.create(
+                model="tts-1",
+                voice="alloy",
+                input=clean,
+                response_format="mp3",
+                speed=1.1  # Slightly faster speech
+            )
+            print(f"🔊 TTS response size: {len(response.content)} bytes")
+            return response.content
+        except Exception as e:
+            print(f"❌ TTS Error: {e}")
+            raise e
+
+    # ---------- 1.  STT ----------
+    try:
+        audio_blob = await audio.read()
+        print(f"📁 Audio blob size: {len(audio_blob)} bytes")
         
-        # Step 2: Get answer from RAG pipeline
-        result = run_rag_pipeline(transcript)
-        answer = result["answer"]
+        if len(audio_blob) == 0:
+            return _voice_error("No audio data received.", "Empty audio blob")
         
-        # Step 3: Text to Speech
-        # Clean the answer for speech (remove markdown)
-        clean_answer = answer.replace("**", "").replace("*", "").replace("- ", "").replace("#", "")
+        transcript = _audio_to_text(audio_blob).strip()
         
-        tts_response = client.audio.speech.create(
-            model="tts-1",
-            voice="alloy",  # Can be: alloy, echo, fable, onyx, nova, shimmer
-            input=clean_answer,
-            response_format="mp3"
-        )
+        # Debug logging
+        print(f"🎤 Transcript: '{transcript}'")
         
-        # Return JSON response with audio data and metadata
-        import base64
-        audio_base64 = base64.b64encode(tts_response.content).decode('utf-8')
-        
-        return {
-            "transcript": transcript,
-            "answer": answer,
-            "sources": result.get("sources", []),
-            "audio_data": audio_base64,
-            "audio_format": "mp3"
-        }
-        
+        # Check if transcript is empty or too short
+        if not transcript or len(transcript.strip()) < 3:
+            return _voice_error("I couldn't hear anything. Please try speaking again.", "Empty or too short transcript")
+            
     except Exception as e:
-        print(f"Voice Ask Error: {e}")
-        return {"error": "Failed to process voice request", "details": str(e)}
+        print(f"❌ STT Error: {e}")
+        return _voice_error("I couldn't understand that audio.", str(e))
+
+    # ---------- 2.  Check for scheduling state ----------
+    # Try to get schedule_state from form data or request body
+    schedule_state = {}
+    try:
+        # Check if there's additional form data
+        form_data = await request.form()
+        if "schedule_state" in form_data:
+            schedule_state = json.loads(form_data["schedule_state"])
+            print(f"📋 Received schedule_state: {schedule_state}")
+    except Exception as e:
+        print(f"❌ Error parsing schedule_state: {e}")
+        # If no form data or parsing fails, continue with empty state
+        pass
+
+    # ---------- 3a.  Scheduling branch ----------
+    print(f"🔍 Checking scheduling branch - schedule_state: {schedule_state}, active: {schedule_state.get('active', False) if schedule_state else False}")
+    if schedule_state and schedule_state.get("active", False):
+        from scheduling_tool.google_calendar import continue_scheduling_flow
+        try:
+            print(f"🔄 Scheduling flow - transcript: '{transcript}', state: {schedule_state}")
+            resp = continue_scheduling_flow(transcript, schedule_state)
+            print(f"📋 Scheduling response: {resp}")
+            # resp = { stage: ..., message: ..., done: bool, error?: str, schedule_state?: dict }
+
+            if resp.get("error"):
+                speech = resp["error"]
+            else:
+                speech = resp["message"]
+
+            audio_out = _text_to_audio(speech)
+            response = _voice_json(transcript, speech, audio_out)
+            
+            # Update schedule state in response
+            if resp.get("done", False):
+                response["schedule_state"] = None  # Clear state when done
+            else:
+                response["schedule_state"] = resp.get("schedule_state", schedule_state)
+                
+            return response
+            
+        except Exception as e:
+            print(f"Scheduling Error: {e}")
+            audio_out = _text_to_audio("Sorry, there was an error with scheduling. Let me help you another way.")
+            return _voice_json(transcript, "Sorry, there was an error with scheduling.", audio_out)
+
+    # ---------- 3b.  Normal RAG branch ----------
+    try:
+        print(f"🔍 Running RAG pipeline for transcript: '{transcript}'")
+        rag = run_rag_pipeline(transcript)
+        print(f"📋 RAG result: {rag}")
+    except Exception as e:
+        print(f"❌ RAG pipeline error: {e}")
+        speech = "Sorry, I'm having trouble processing your request right now. Please try again."
+        audio_out = _text_to_audio(speech)
+        return _voice_json(transcript, speech, audio_out)
+
+    # If RAG says "trigger_schedule", we START the scheduling flow
+    if rag.get("trigger_schedule"):
+        from scheduling_tool.google_calendar import start_scheduling_flow
+        try:
+            print(f"🚀 Starting scheduling flow due to trigger_schedule")
+            sched = start_scheduling_flow()
+            speech = sched["message"]
+            audio_out = _text_to_audio(speech)
+            return _voice_json(
+                transcript,
+                speech,
+                audio_out,
+                schedule_state=sched.get("schedule_state")
+            )
+        except Exception as e:
+            print(f"Schedule Start Error: {e}")
+            # Fall back to normal RAG response
+            pass
+
+    # Plain answer
+    speech = rag["answer"]
+    sources = rag.get("sources", [])
+    audio_out = _text_to_audio(speech)
+    return _voice_json(transcript, speech, audio_out, sources=sources)
+
+
+# ---------- tiny helpers ----------
+def _voice_json(transcript: str, answer: str, audio_bytes: bytes, **kw):
+    return {
+        "transcript": transcript,
+        "answer": answer,
+        "audio_data": base64.b64encode(audio_bytes).decode(),
+        "audio_format": "mp3",
+        **kw
+    }
+
+def _voice_error(msg: str, details: str):
+    return {
+        "transcript": "",
+        "answer": msg,
+        "audio_data": "",
+        "error": details
+    }
 
 @app.post("/tts")
 async def text_to_speech(req: Request):

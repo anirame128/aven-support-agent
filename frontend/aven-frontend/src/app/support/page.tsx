@@ -10,16 +10,17 @@ type Message = {
   sources?: string[];
 };
 
-// Add ScheduleState type
-
+// ScheduleState type
 type ScheduleState = {
   active: boolean;
-  stage: "offered" | "selecting-time" | "collecting-info" | "confirming" | "done" | "cancelled";
+  stage: "offering_schedule" | "awaiting_time" | "awaiting_contact" | "confirming" | "done" | "cancelled";
   selectedTime?: string;
   name?: string;
   email?: string;
   phone?: string;
   notes?: string;
+  available_times?: string[];
+  chosen_time?: string;
 };
 
 export default function SupportPage() {
@@ -38,10 +39,22 @@ export default function SupportPage() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [scheduleState, setScheduleState] = useState<ScheduleState | null>(null);
   
+  // Voice recording refs
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
+  const silenceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isRecordingActiveRef = useRef(false);
+  const hasSpokenRef = useRef(false);
+  
   // Check microphone support
   useEffect(() => {
     if (typeof window !== 'undefined' && navigator.mediaDevices) {
       setMicSupported(true);
+      
+      if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
+        console.warn("⚠️ Microphone access requires HTTPS. Voice features may not work on HTTP.");
+      }
     }
   }, []);
   
@@ -64,17 +77,45 @@ export default function SupportPage() {
   // Helper: parse phone
   const isPhone = (str: string) => /\d{3}[\s-]?\d{3}[\s-]?\d{4}/.test(str);
 
+  // Detect silence and stop recording
+  const detectSilence = (analyser: AnalyserNode, mediaRecorder: MediaRecorder) => {
+    const data = new Uint8Array(analyser.fftSize);
+    let silenceStart: number | null = null;
+    const silenceDelay = 1500; // 1.5 seconds of silence
+    const voiceThreshold = 8;
+
+    const check = () => {
+      if (!isRecordingActiveRef.current) return;
+      
+      analyser.getByteTimeDomainData(data);
+      const max = Math.max(...data.map(v => Math.abs(v - 128)));
+
+      if (max >= voiceThreshold) {
+        // User is speaking
+        hasSpokenRef.current = true;
+        silenceStart = null;
+      } else if (hasSpokenRef.current && max < voiceThreshold) {
+        // User has spoken and is now silent
+        if (!silenceStart) silenceStart = Date.now();
+        else if (Date.now() - silenceStart > silenceDelay) {
+          console.log("🔇 Silence detected after speech — stopping recording");
+          stopRecording();
+          return;
+        }
+      }
+
+      if (isRecordingActiveRef.current) {
+        requestAnimationFrame(check);
+      }
+    };
+
+    requestAnimationFrame(check);
+  };
+
   // Text chat handler
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
-
-    // Scheduling flow interception
-    if (scheduleState && scheduleState.active) {
-      await handleSchedulingFlow(input.trim());
-      setInput("");
-      return;
-    }
 
     const userMsg: Message = { role: "user", content: input };
     setMessages((msgs) => [...msgs, userMsg]);
@@ -82,10 +123,17 @@ export default function SupportPage() {
     setLoading(true);
 
     try {
+      const requestBody: { question: string; schedule_state?: ScheduleState } = { question: input };
+      
+      // Add schedule state if we're in a scheduling flow
+      if (scheduleState && scheduleState.active) {
+        requestBody.schedule_state = scheduleState;
+      }
+      
       const res = await fetch(`${API_URL}/ask`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: input })
+        body: JSON.stringify(requestBody)
       });
       if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
       const data = await res.json();
@@ -97,9 +145,10 @@ export default function SupportPage() {
           sources: data.sources
         } as Message
       ]);
-      // Scheduling trigger
-      if (data.trigger_schedule) {
-        setScheduleState({ active: true, stage: "offered" });
+      
+      // Update schedule state from response
+      if (data.schedule_state !== undefined) {
+        setScheduleState(data.schedule_state);
       }
     } catch (err) {
       console.error('Error sending message:', err);
@@ -114,202 +163,122 @@ export default function SupportPage() {
     setLoading(false);
   };
 
-  // Scheduling flow handler
+  // Scheduling flow handler - now handled by backend
   const handleSchedulingFlow = async (userInput: string) => {
-    // Step through the stages
-    if (!scheduleState) return;
-    if (scheduleState.stage === "offered") {
-      if (isYes(userInput)) {
-        // Fetch available times
-        setMessages(msgs => [
-          ...msgs,
-          { role: "assistant", content: "Fetching available times..." }
-        ]);
-        const times = await fetch(`${API_URL}/available-times`).then(res => res.json());
-        setScheduleState({ ...scheduleState, stage: "selecting-time" });
-        setMessages(msgs => [
-          ...msgs,
-          {
-            role: "assistant",
-            content: `Here are some available times:\n\n${(times.available_times || []).slice(0, 5).map((t: string) => `- ${new Date(t).toLocaleString()}`).join('\n')}\n\nPlease reply with your preferred time.`
-          }
-        ]);
-      } else if (isNo(userInput)) {
-        setMessages(msgs => [
-          ...msgs,
-          { role: "assistant", content: "No problem! If you change your mind, just let me know." }
-        ]);
-        setScheduleState(null);
-      } else {
-        setMessages(msgs => [
-          ...msgs,
-          { role: "assistant", content: "Would you like me to help you schedule a call with Aven's support team? (Yes or No)" }
-        ]);
-      }
-    } else if (scheduleState.stage === "selecting-time") {
-      // Try to parse a valid ISO time from user input
-      const times = await fetch(`${API_URL}/available-times`).then(res => res.json());
-      const allTimes: string[] = times.available_times || [];
-      let selectedISO = allTimes.find(t => {
-        const local = new Date(t).toLocaleString().toLowerCase();
-        return userInput.toLowerCase().includes(local.toLowerCase());
-      });
-      if (!selectedISO) {
-        // Try direct ISO match
-        selectedISO = allTimes.find(t => userInput.includes(t));
-      }
-      if (!selectedISO) {
-        setMessages(msgs => [
-          ...msgs,
-          { role: "assistant", content: "Sorry, I couldn't match that to an available time. Please copy-paste or re-type your preferred time from the list above." }
-        ]);
-        return;
-      }
-      setScheduleState(prev => ({ ...prev!, stage: "collecting-info", selectedTime: selectedISO }));
-      setMessages(msgs => [
-        ...msgs,
-        {
-          role: "assistant",
-          content: "Great! Please provide the following details:\n\n- Full Name\n- Email\n- Phone Number\n- Any additional notes (optional)\n\nYou can send all at once or one by one."
-        }
-      ]);
-    } else if (scheduleState.stage === "collecting-info") {
-      // Parse info
-      let { name, email, phone, notes } = scheduleState;
-      const lines = userInput.split(/\n|,|;/).map(l => l.trim());
-      for (const line of lines) {
-        if (!name && line.split(' ').length >= 2 && !isEmail(line) && !isPhone(line)) name = line;
-        if (!email && isEmail(line)) email = line;
-        if (!phone && isPhone(line)) phone = line;
-        if (!notes && line.toLowerCase().includes('note')) notes = line;
-      }
-      // Fallback: try to parse all at once
-      if (!name && !email && !phone && lines.length === 3) {
-        [name, email, phone] = lines;
-      }
-      setScheduleState(prev => ({ ...prev!, name, email, phone, notes }));
-      if (name && email && phone) {
-        setScheduleState(prev => ({ ...prev!, stage: "confirming" }));
-        setMessages(msgs => [
-          ...msgs,
-          {
-            role: "assistant",
-            content: `Just to confirm:\n\n- Time: ${new Date(scheduleState.selectedTime!).toLocaleString()}\n- Name: ${name}\n- Email: ${email}\n- Phone: ${phone}\n- Notes: ${notes || "None"}\n\nShould I go ahead and schedule this? (Yes/No)`
-          }
-        ]);
-      } else {
-        setMessages(msgs => [
-          ...msgs,
-          { role: "assistant", content: `Missing info. Please provide your${!name ? ' name,' : ''}${!email ? ' email,' : ''}${!phone ? ' phone,' : ''}`.replace(/,$/, ".") }
-        ]);
-      }
-    } else if (scheduleState.stage === "confirming") {
-      if (isYes(userInput)) {
-        // Schedule the call
-        setMessages(msgs => [
-          ...msgs,
-          { role: "assistant", content: "Scheduling your call..." }
-        ]);
-        await fetch(`${API_URL}/schedule-support-call`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: scheduleState.name,
-            email: scheduleState.email,
-            datetime: scheduleState.selectedTime,
-            phone: scheduleState.phone || "",
-            notes: scheduleState.notes || ""
-          }),
-        });
-        setMessages(msgs => [
-          ...msgs,
-          {
-            role: "assistant",
-            content: "✅ Your call is scheduled! An email has been sent to your inbox. Is there anything else I can help with?"
-          }
-        ]);
-        setScheduleState(null);
-      } else if (isNo(userInput)) {
-        setMessages(msgs => [
-          ...msgs,
-          { role: "assistant", content: "No problem! If you change your mind, just let me know." }
-        ]);
-        setScheduleState(null);
-      } else {
-        setMessages(msgs => [
-          ...msgs,
-          { role: "assistant", content: "Should I go ahead and schedule this? (Yes/No)" }
-        ]);
-      }
-    }
+    // This is now handled by the backend via the /ask endpoint
+    // The backend will process the scheduling flow and return the appropriate response
+    console.log("📋 Scheduling flow handled by backend for input:", userInput);
   };
 
-  // Scheduling flow: offer prompt when triggered
-  useEffect(() => {
-    if (scheduleState?.stage === "offered") {
-      setMessages(msgs => [
-        ...msgs,
-        {
-          role: "assistant",
-          content: "Would you like me to help you schedule a call with Aven's support team? (Yes or No)"
-        }
-      ]);
-    }
-  }, [scheduleState?.stage]);
-
-  // Start voice recording using MediaRecorder
+  // Start voice recording
   const startRecording = async () => {
     if (!micSupported) {
-      alert('Microphone access is not supported in your browser.');
+      alert("Microphone access is not supported in your browser.");
       return;
     }
 
+    if (isRecordingActiveRef.current) {
+      console.log("🔇 Already recording, skipping start");
+      return;
+    }
+
+    // 🔁 Ensure loop is active when starting recording
+    isRecordingActiveRef.current = true;
+
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
+      const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           sampleRate: 44100,
-          channelCount: 1
-        } 
+          channelCount: 1,
+        },
       });
-      
+
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      audioContextRef.current = audioContext;
+
+      const analyser = audioContext.createAnalyser();
+      analyser.fftSize = 2048;
+      analyserRef.current = analyser;
+
+      const source = audioContext.createMediaStreamSource(stream);
+      sourceRef.current = source;
+      source.connect(analyser);
+
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
-      
+
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
           audioChunksRef.current.push(event.data);
         }
       };
-      
+
       mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        await processVoiceInput(audioBlob);
-        
-        // Stop all tracks to release microphone
-        stream.getTracks().forEach(track => track.stop());
+        if (audioChunksRef.current.length > 0) {
+          const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+          await processVoiceInput(audioBlob);
+        }
+
+        // Clean up audio nodes
+        stream.getTracks().forEach((track) => track.stop());
+        sourceRef.current?.disconnect();
+        analyserRef.current?.disconnect();
       };
-      
+
       mediaRecorder.start();
       setIsRecording(true);
-      setVoiceTranscript('');
-      
+      hasSpokenRef.current = false;
+      setVoiceTranscript("");
+
+      // Interrupt any playing audio when starting to record
+      interruptAudio();
+
+      // Begin silence detection loop
+      detectSilence(analyser, mediaRecorder);
+
     } catch (error) {
-      console.error('Error accessing microphone:', error);
-      alert('Could not access microphone. Please check permissions.');
+      console.error("Error accessing microphone:", error);
+      
+      // 🔧 Reset recording state on error
+      setIsRecording(false);
+      isRecordingActiveRef.current = false;
+      
+      let errorMsg = "Could not access microphone. Please check permissions.";
+      
+      if (error instanceof Error) {
+        if (error.name === "NotAllowedError" || error.message.includes("permission")) {
+          errorMsg = "Microphone access was denied. Please allow microphone permissions in your browser settings and try again.";
+        } else if (error.name === "NotSupportedError") {
+          errorMsg = "Microphone access is not supported in your browser. Please try a different browser.";
+        } else if (error.message.includes("not allowed")) {
+          errorMsg = "Voice recording is not allowed. Please ensure you're using HTTPS and check your browser settings.";
+        }
+      }
+      
+      alert(errorMsg);
     }
   };
 
   // Stop voice recording
   const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop();
-      setIsRecording(false);
+    console.log("🛑 Stopping recording");
+    isRecordingActiveRef.current = false;
+    
+    // 🔧 Guard against double stop calls
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
+      try {
+        mediaRecorderRef.current.stop();
+      } catch (error) {
+        console.warn("🔇 MediaRecorder stop error:", error);
+      }
     }
+    setIsRecording(false);
   };
 
-  // Process voice input through OpenAI STT and TTS
+  // Process voice input through backend
   const processVoiceInput = async (audioBlob: Blob) => {
+    console.log("🎤 Processing voice input...");
     setLoading(true);
     
     try {
@@ -317,7 +286,12 @@ export default function SupportPage() {
       const formData = new FormData();
       formData.append('audio', audioBlob, 'recording.webm');
       
-      // Send to voice-ask endpoint for complete pipeline
+      // Add schedule state if we're in a scheduling flow
+      if (scheduleState && scheduleState.active) {
+        formData.append('schedule_state', JSON.stringify(scheduleState));
+      }
+      
+      // Send to voice-ask endpoint
       const response = await fetch(`${API_URL}/voice-ask`, {
         method: "POST",
         body: formData
@@ -327,14 +301,17 @@ export default function SupportPage() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       
-      // Parse JSON response
       const data = await response.json();
       
       if (data.error) {
         throw new Error(data.error);
       }
       
-      const { transcript, answer, sources, audio_data } = data;
+      const { transcript, answer, sources, audio_data, schedule_state: newScheduleState } = data;
+      
+      console.log("🎤 Received transcript:", transcript);
+      console.log("📋 Received schedule_state:", newScheduleState);
+      console.log("🔊 Received audio_data length:", audio_data ? audio_data.length : 0);
       
       // Update transcript display
       setVoiceTranscript(transcript);
@@ -349,24 +326,77 @@ export default function SupportPage() {
       
       setMessages((msgs) => [...msgs, userMsg, assistantMsg]);
       
-      // Convert base64 audio to blob and play
-      const audioBytes = Uint8Array.from(atob(audio_data), c => c.charCodeAt(0));
-      const responseAudioBlob = new Blob([audioBytes], { type: 'audio/mpeg' });
-      const audioUrl = URL.createObjectURL(responseAudioBlob);
+      // Update schedule state from voice response
+      if (newScheduleState !== undefined) {
+        setScheduleState(newScheduleState);
+      }
       
-      if (audioRef.current) {
-        audioRef.current.src = audioUrl;
-        audioRef.current.onended = () => {
-          setIsPlaying(false);
-          URL.revokeObjectURL(audioUrl);
-        };
-        audioRef.current.onplay = () => setIsPlaying(true);
-        await audioRef.current.play();
+      // Play audio response if available
+      if (audio_data) {
+        console.log("🔊 Playing audio response...");
+        const audioBytes = Uint8Array.from(atob(audio_data), c => c.charCodeAt(0));
+        const responseAudioBlob = new Blob([audioBytes], { type: 'audio/mpeg' });
+        const audioUrl = URL.createObjectURL(responseAudioBlob);
+        
+        if (audioRef.current) {
+          audioRef.current.src = audioUrl;
+          audioRef.current.onended = () => {
+            console.log("🔊 Audio playback ended");
+            setIsPlaying(false);
+            URL.revokeObjectURL(audioUrl);
+            
+            // 🔁 Restart voice loop after audio ends
+            if (isRecordingActiveRef.current) {
+              console.log("🔁 Restarting voice loop after audio playback");
+              startRecording();
+            }
+          };
+          audioRef.current.onplay = () => {
+            console.log("🔊 Audio playback started");
+            setIsPlaying(true);
+          };
+          
+          try {
+            await audioRef.current.play();
+          } catch (playError) {
+            console.warn("🔇 Audio playback blocked by browser:", playError);
+            
+            // 🔁 Restart voice loop if audio playback fails
+            if (isRecordingActiveRef.current) {
+              console.log("🔁 Restarting voice loop after audio playback failure");
+              startRecording();
+            }
+          }
+        } else {
+          // 🔁 Restart voice loop if no audio ref
+          if (isRecordingActiveRef.current) {
+            console.log("🔁 Restarting voice loop (no audio ref)");
+            startRecording();
+          }
+        }
+      } else {
+        // 🔁 Restart voice loop if no audio data
+        if (isRecordingActiveRef.current) {
+          console.log("🔁 Restarting voice loop (no audio data)");
+          startRecording();
+        }
       }
       
     } catch (error) {
       console.error('Error processing voice input:', error);
-      const errorMsg = "Sorry, there was an error processing your voice input.";
+      
+      let errorMsg = "Sorry, there was an error processing your voice input.";
+      
+      if (error instanceof Error) {
+        if (error.message.includes("permission") || error.message.includes("denied")) {
+          errorMsg = "Microphone access is required for voice interaction. Please allow microphone permissions in your browser and try again.";
+        } else if (error.message.includes("not allowed")) {
+          errorMsg = "Voice recording is not allowed. Please check your browser settings and ensure you're using HTTPS.";
+        } else {
+          errorMsg = `Sorry, there was an error processing your voice input: ${error.message}`;
+        }
+      }
+      
       setMessages((msgs) => [
         ...msgs,
         { 
@@ -374,6 +404,12 @@ export default function SupportPage() {
           content: errorMsg 
         } as Message
       ]);
+      
+      // 🔁 Always restart voice loop after any error
+      if (isRecordingActiveRef.current) {
+        console.log("🔁 Restarting voice loop after error");
+        startRecording();
+      }
     }
     
     setLoading(false);
@@ -384,13 +420,28 @@ export default function SupportPage() {
     if (isRecording) {
       stopRecording();
     } else {
-      startRecording();
+      // 🔧 Prevent double recording by checking active state
+      if (!isRecordingActiveRef.current) {
+        startRecording();
+      } else {
+        console.log("🔇 Recording already active, ignoring toggle");
+      }
     }
   };
 
   // Stop audio playback
   const stopPlayback = () => {
     if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      setIsPlaying(false);
+    }
+  };
+
+  // Interrupt audio playback when user starts speaking
+  const interruptAudio = () => {
+    if (isPlaying && audioRef.current) {
+      console.log("🔇 Interrupting audio playback");
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
       setIsPlaying(false);
@@ -475,12 +526,20 @@ export default function SupportPage() {
                     title={isRecording ? "Stop recording" : "Start recording"}
                     aria-label={isRecording ? "Stop recording" : "Start recording"}
                   >
-                    {/* Mic SVG icon */}
-                    <svg className={styles.voiceIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="9" y="2" width="6" height="12" rx="3" />
-                      <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-                      <line x1="12" y1="22" x2="12" y2="18" />
-                    </svg>
+                    {/* Mic SVG icon when not recording, Stop icon when recording */}
+                    {isRecording ? (
+                      <svg className={styles.voiceIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                        <line x1="9" y1="9" x2="15" y2="15" />
+                        <line x1="15" y1="9" x2="9" y2="15" />
+                      </svg>
+                    ) : (
+                      <svg className={styles.voiceIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="9" y="2" width="6" height="12" rx="3" />
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                        <line x1="12" y1="22" x2="12" y2="18" />
+                      </svg>
+                    )}
                   </button>
                   <button
                     type="submit"
