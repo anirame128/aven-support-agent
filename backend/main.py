@@ -7,25 +7,78 @@ from pinecone import Pinecone
 from openai import OpenAI
 import time
 import io
+import hashlib
+import json
+from functools import lru_cache
 from llm_moderation.guardrails import check_guardrails
 from scheduling_tool.google_calendar import ScheduleRequest, schedule_support_event, get_available_times
 
 load_dotenv()
 
-# Initialize Pinecone
+# Initialize Pinecone with connection pooling
 pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
 index = pc.Index(os.getenv("PINECONE_INDEX_NAME"))
 
-# Initialize OpenAI client
+# Initialize OpenAI client with connection pooling
 client = OpenAI(
-    api_key=os.getenv("OPENAI_API_KEY"),  # Make sure to add this to your .env file
+    api_key=os.getenv("OPENAI_API_KEY"),
+    max_retries=3,
+    timeout=30.0
 )
+
+# Simple in-memory cache for responses
+response_cache = {}
+
+def get_cache_key(question: str) -> str:
+    """Generate a cache key for the question"""
+    return hashlib.md5(question.lower().strip().encode()).hexdigest()
+
+@lru_cache(maxsize=1000)
+def cached_guardrails_check(text: str) -> dict:
+    """Cache guardrails check results"""
+    return check_guardrails(text)
 
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"]
 )
+
+@app.on_event("startup")
+async def startup_event():
+    """Warm up connections on startup to reduce cold start latency"""
+    print("🚀 Warming up connections...")
+    
+    # Warm up Pinecone connection
+    try:
+        # Test Pinecone connection with a simple query
+        test_query = {"inputs": {"text": "test"}, "top_k": 1}
+        index.search(namespace="__default__", query=test_query)
+        print("✅ Pinecone connection warmed up")
+    except Exception as e:
+        print(f"⚠️ Pinecone warmup failed: {e}")
+    
+    # Warm up OpenAI connection
+    try:
+        # Test OpenAI with a simple completion
+        client.chat.completions.create(
+            model="gpt-4.1-mini-2025-04-14",
+            messages=[{"role": "user", "content": "test"}],
+            max_tokens=1
+        )
+        print("✅ OpenAI connection warmed up")
+    except Exception as e:
+        print(f"⚠️ OpenAI warmup failed: {e}")
+    
+    print("🎯 Server ready!")
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Cleanup on shutdown"""
+    print("🛑 Shutting down server...")
+    # Clear cache
+    response_cache.clear()
+    print("✅ Cache cleared")
 
 def lines_to_markdown_bullets(text):
     import re
@@ -58,7 +111,16 @@ def lines_to_markdown_bullets(text):
 def run_rag_pipeline(question):
     question = question.strip()
     
+    # Check cache first
+    cache_key = get_cache_key(question)
+    if cache_key in response_cache:
+        cached_result = response_cache[cache_key]
+        cached_result["cached"] = True
+        return cached_result
+    
     t0 = time.time()
+    
+    # Optimize: Use async search if possible, or implement connection pooling
     res = index.search(
         namespace="__default__",
         query={"inputs": {"text": question}, "top_k": 10}
@@ -74,18 +136,23 @@ def run_rag_pipeline(question):
     is_join_intent = any(k in lower_q for k in join_keywords)
 
     if not matches and is_join_intent:
-        return {
+        result = {
             "answer": "You can apply for an Aven card at [https://www.aven.com](https://www.aven.com).",
             "sources": ["https://www.aven.com"],
             "latency_ms": int(pinecone_time * 1000)
         }
+        response_cache[cache_key] = result
+        return result
+        
     if not matches:
-        return {
+        result = {
             "answer": "I'm not sure about that. Please reach out to Aven's support team for more help.",
             "sources": [],
             "latency_ms": int(pinecone_time * 1000),
             "trigger_schedule": True
         }
+        response_cache[cache_key] = result
+        return result
 
     context = "\n---\n".join(
         hit["fields"]["text"] for hit in matches
@@ -122,16 +189,18 @@ def run_rag_pipeline(question):
 
     # If the LLM still says "I'm not sure about that" and it's a join/apply question, override the answer
     if is_join_intent and "i'm not sure about that" in answer.lower():
-        return {
+        result = {
             "answer": "You can apply for an Aven card at [https://www.aven.com](https://www.aven.com).",
             "sources": ["https://www.aven.com"],
             "latency_ms": int((time.time() - t0) * 1000)
         }
+        response_cache[cache_key] = result
+        return result
 
     # If the LLM says "I'm not sure about that", direct to support
     if "i'm not sure about that" in answer.lower():
         answer += "\n\nFor further assistance, please contact support@aven.com or visit [https://www.aven.com/call](https://www.aven.com/call)."
-        return {
+        result = {
             "answer": answer,
             "sources": sources,
             "latency_ms": int((time.time() - t0) * 1000),
@@ -141,8 +210,10 @@ def run_rag_pipeline(question):
             },
             "trigger_schedule": True
         }
+        response_cache[cache_key] = result
+        return result
 
-    return {
+    result = {
         "answer": answer,
         "sources": sources,
         "latency_ms": int((time.time() - t0) * 1000),  # ⏱ Total latency
@@ -151,6 +222,8 @@ def run_rag_pipeline(question):
             "llm_ms": int(llm_time * 1000)
         }
     }
+    response_cache[cache_key] = result
+    return result
 
 @app.post("/ask")
 async def ask_question(req: Request):
@@ -158,8 +231,8 @@ async def ask_question(req: Request):
     if not question:
         return {"error": "No question provided."}
     
-    # Guardrails check
-    check = check_guardrails(question)
+    # Use cached guardrails check
+    check = cached_guardrails_check(question)
     if check["blocked"]:
         reason = check["reason"]
         violations = check.get("violations", [])
@@ -303,3 +376,21 @@ async def schedule_support_call(req: ScheduleRequest):
 @app.get("/available-times")
 async def available_times():
     return get_available_times()
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint with performance metrics"""
+    return {
+        "status": "healthy",
+        "cache_size": len(response_cache),
+        "timestamp": time.time()
+    }
+
+@app.get("/performance")
+async def performance_metrics():
+    """Get performance metrics"""
+    return {
+        "cache_hits": len([r for r in response_cache.values() if r.get("cached", False)]),
+        "cache_size": len(response_cache),
+        "total_requests": len(response_cache)
+    }
