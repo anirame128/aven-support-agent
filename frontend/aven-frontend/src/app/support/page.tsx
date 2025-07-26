@@ -77,7 +77,7 @@ export default function SupportPage() {
   // const isPhone = (str: string) => /\d{3}[\s-]?\d{3}[\s-]?\d{4}/.test(str);
 
   // Detect silence and stop recording
-  const detectSilence = (analyser: AnalyserNode, _mediaRecorder: MediaRecorder) => {
+  const detectSilence = (analyser: AnalyserNode) => {
     const data = new Uint8Array(analyser.fftSize);
     let silenceStart: number | null = null;
     const silenceDelay = 1500; // 1.5 seconds of silence
@@ -192,7 +192,7 @@ export default function SupportPage() {
         },
       });
 
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
       audioContextRef.current = audioContext;
 
       const analyser = audioContext.createAnalyser();
@@ -234,7 +234,7 @@ export default function SupportPage() {
       interruptAudio();
 
       // Begin silence detection loop
-      detectSilence(analyser, mediaRecorder);
+      detectSilence(analyser);
 
     } catch (error) {
       console.error("Error accessing microphone:", error);
