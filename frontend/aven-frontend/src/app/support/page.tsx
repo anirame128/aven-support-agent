@@ -30,7 +30,7 @@ export default function SupportPage() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
-  const [voiceTranscript, setVoiceTranscript] = useState('');
+  // const [voiceTranscript, setVoiceTranscript] = useState('');
   const [isPlaying, setIsPlaying] = useState(false);
   const [micSupported, setMicSupported] = useState(false);
   const chatContainerRef = useRef<HTMLDivElement>(null);
@@ -43,7 +43,6 @@ export default function SupportPage() {
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
-  const silenceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isRecordingActiveRef = useRef(false);
   const hasSpokenRef = useRef(false);
   
@@ -68,17 +67,17 @@ export default function SupportPage() {
   // Helper to get backend API URL
   const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
 
-  // Helper: parse yes/no
-  const isYes = (msg: string) => /^(yes|yep|sure|ok|yeah|y)$/i.test(msg.trim());
-  const isNo = (msg: string) => /^(no|nope|nah|n)$/i.test(msg.trim());
+  // Helper: parse yes/no (unused - handled by backend)
+  // const isYes = (msg: string) => /^(yes|yep|sure|ok|yeah|y)$/i.test(msg.trim());
+  // const isNo = (msg: string) => /^(no|nope|nah|n)$/i.test(msg.trim());
 
-  // Helper: parse email
-  const isEmail = (str: string) => /\S+@\S+\.\S+/.test(str);
-  // Helper: parse phone
-  const isPhone = (str: string) => /\d{3}[\s-]?\d{3}[\s-]?\d{4}/.test(str);
+  // Helper: parse email (unused - handled by backend)
+  // const isEmail = (str: string) => /\S+@\S+\.\S+/.test(str);
+  // Helper: parse phone (unused - handled by backend)
+  // const isPhone = (str: string) => /\d{3}[\s-]?\d{3}[\s-]?\d{4}/.test(str);
 
   // Detect silence and stop recording
-  const detectSilence = (analyser: AnalyserNode, mediaRecorder: MediaRecorder) => {
+  const detectSilence = (analyser: AnalyserNode, _mediaRecorder: MediaRecorder) => {
     const data = new Uint8Array(analyser.fftSize);
     let silenceStart: number | null = null;
     const silenceDelay = 1500; // 1.5 seconds of silence
@@ -123,7 +122,7 @@ export default function SupportPage() {
     setLoading(true);
 
     try {
-      const requestBody: { question: string; schedule_state?: ScheduleState } = { question: input };
+      const requestBody: { question: string; schedule_state?: ScheduleState | null } = { question: input };
       
       // Add schedule state if we're in a scheduling flow
       if (scheduleState && scheduleState.active) {
@@ -163,12 +162,12 @@ export default function SupportPage() {
     setLoading(false);
   };
 
-  // Scheduling flow handler - now handled by backend
-  const handleSchedulingFlow = async (userInput: string) => {
-    // This is now handled by the backend via the /ask endpoint
-    // The backend will process the scheduling flow and return the appropriate response
-    console.log("📋 Scheduling flow handled by backend for input:", userInput);
-  };
+  // Scheduling flow handler - now handled by backend (unused)
+  // const handleSchedulingFlow = async (userInput: string) => {
+  //   // This is now handled by the backend via the /ask endpoint
+  //   // The backend will process the scheduling flow and return the appropriate response
+  //   console.log("📋 Scheduling flow handled by backend for input:", userInput);
+  // };
 
   // Start voice recording
   const startRecording = async () => {
@@ -229,7 +228,7 @@ export default function SupportPage() {
       mediaRecorder.start();
       setIsRecording(true);
       hasSpokenRef.current = false;
-      setVoiceTranscript("");
+      // setVoiceTranscript("");
 
       // Interrupt any playing audio when starting to record
       interruptAudio();
@@ -314,7 +313,7 @@ export default function SupportPage() {
       console.log("🔊 Received audio_data length:", audio_data ? audio_data.length : 0);
       
       // Update transcript display
-      setVoiceTranscript(transcript);
+      // setVoiceTranscript(transcript);
       
       // Add messages to chat
       const userMsg: Message = { role: "user", content: transcript };
@@ -429,14 +428,14 @@ export default function SupportPage() {
     }
   };
 
-  // Stop audio playback
-  const stopPlayback = () => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-      setIsPlaying(false);
-    }
-  };
+  // Stop audio playback (unused)
+  // const stopPlayback = () => {
+  //   if (audioRef.current) {
+  //     audioRef.current.pause();
+  //     audioRef.current.currentTime = 0;
+  //     setIsPlaying(false);
+  //   }
+  // };
 
   // Interrupt audio playback when user starts speaking
   const interruptAudio = () => {
