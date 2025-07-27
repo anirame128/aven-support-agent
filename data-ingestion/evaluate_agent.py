@@ -15,7 +15,7 @@ API_URL = os.environ.get("NEXT_PUBLIC_API_URL")
 if not API_URL:
     raise EnvironmentError("NEXT_PUBLIC_API_URL environment variable must be set.")
 
-EVAL_PATH = "evaluation_set/evaluation_scoring_set_v2.json"
+EVAL_PATH = "evaluation_set/evaluation_set.json"
 
 print("[INFO] Loading evaluation set...")
 with open(EVAL_PATH) as f:
@@ -52,18 +52,13 @@ def cosine_similarity(vec1, vec2):
         return 0.0
     return float(np.dot(vec1, vec2) / (np.linalg.norm(vec1) * np.linalg.norm(vec2)))
 
-# Cache expected answer embeddings to avoid redundant API calls
-expected_embeddings = {}
-for q in questions:
-    exp = q["expected_answer"]
-    if exp not in expected_embeddings:
-        expected_embeddings[exp] = get_embedding(exp)
+# No caching - get embeddings fresh each time
 
 def semantic_accuracy_score(agent_answer, expected_answer):
     if not agent_answer.strip():
         return 0
     agent_emb = get_embedding(agent_answer)
-    expected_emb = expected_embeddings[expected_answer]
+    expected_emb = get_embedding(expected_answer)
     sim = cosine_similarity(agent_emb, expected_emb)
     if sim > 0.85:
         return 1

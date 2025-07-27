@@ -344,6 +344,25 @@
   color: white;
 } 
 
+/* Voice status indicator */
+.voiceStatus {
+  padding: 0.75rem 1rem;
+  background: #f0f9ff;
+  border-top: 1px solid #e0f2fe;
+  text-align: center;
+  animation: pulse 2s infinite;
+}
+
+.voiceStatusText {
+  color: #0369a1;
+  font-size: 0.875rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
 /* Audio playback indicator */
 .audioIndicator {
   position: fixed;
@@ -359,7 +378,60 @@
 }
 
 @keyframes pulse {
-  0% { opacity: 1; }
-  50% { opacity: 0.7; }
-  100% { opacity: 1; }
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Audio blocked indicator */
+.audioBlocked {
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+  border-radius: 8px;
+  margin: 1rem;
+  padding: 0.75rem;
+}
+
+.audioBlockedMessage {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.875rem;
+  color: #92400e;
+}
+
+.enableAudioButton {
+  background: #f59e0b;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.enableAudioButton:hover {
+  background: #d97706;
+}
+
+/* Audio enablement banner */
+.audioEnablementBanner {
+  background: #dbeafe;
+  border: 1px solid #3b82f6;
+  border-radius: 8px;
+  margin: 1rem;
+  padding: 0.75rem;
+}
+
+.audioEnablementMessage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  color: #1e40af;
+  text-align: center;
 } 
