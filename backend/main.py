@@ -316,8 +316,7 @@ def run_rag_pipeline(question: str) -> dict:
 
 
     if should_trigger_schedule:
-        answer += "\n\nI'd be happy to help you connect with our support team for further assistance."
-        answer += "\n\nWould you like me to help you schedule a call with our support team?"
+        answer = "Would you like me to help you schedule a call with our support team? (Reply with Yes or No)"
         
         return build_response(
             answer, 

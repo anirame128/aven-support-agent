@@ -21,7 +21,7 @@ def check_moderation(text: str) -> Dict:
 # ---------- Custom Regex-Based Filters ----------
 
 SENSITIVE_PATTERNS = {
-    "personal_data": r"\b(SSN|social security number|email address|home address|phone number|date of birth)\b",
+    "personal_data": r"\b(SSN|social security number|home address|date of birth)\b",
     "legal_advice": r"\b(lawsuit|attorney|lawyer|legal advice|court|settlement|file a claim|sue)\b",
     "financial_advice": r"\b(invest|stock|retirement|buy|sell|portfolio|wealth management|tax advice|IRA|Roth IRA)\b"
 }

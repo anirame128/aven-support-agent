@@ -403,7 +403,40 @@ def _handle_contact_info(user_text: str, state: Dict[str, Any]) -> Dict[str, Any
     }
 
 def _handle_confirmation(user_text: str, state: Dict[str, Any]) -> Dict[str, Any]:
-    """Handle final confirmation stage"""
+    """Handle final confirmation stage with automatic edit detection"""
+    user_lower = user_text.lower()
+    
+    # Check if user wants to edit contact info explicitly
+    if any(word in user_lower for word in ["edit", "change", "wrong", "incorrect", "fix", "update"]):
+        return {
+            "message": "I can help you edit your contact information. Please tell me your correct full name, email address, and phone number.",
+            "stage": "awaiting_contact",
+            "done": False,
+            "schedule_state": state
+        }
+    
+    # Check if user provided new contact information
+    name, email, phone = _parse_contact_from_speech(user_text)
+    if name or email or phone:
+        # Update the state with new information
+        if name:
+            state["name"] = name
+        if email:
+            state["email"] = email
+        if phone:
+            state["phone"] = phone
+        
+        # Show updated confirmation
+        dt = datetime.fromisoformat(state["chosen_time"])
+        formatted_time = dt.strftime("%A, %B %d at %I:%M %p")
+        
+        return {
+            "message": f"Perfect! Let me confirm your updated appointment:\n\nTime: {formatted_time}\nName: {state['name']}\nEmail: {state['email']}\nPhone: {state['phone']}\n\nShould I go ahead and schedule this call for you?",
+            "stage": "confirming",
+            "done": False,
+            "schedule_state": state
+        }
+    
     if _is_yes_response(user_text):
         # Book the appointment
         try:
@@ -455,7 +488,7 @@ def _handle_confirmation(user_text: str, state: Dict[str, Any]) -> Dict[str, Any
     
     else:
         return {
-            "message": "I didn't catch that. Should I go ahead and schedule this call? Please say yes or no.",
+            "message": "I didn't catch that. Should I go ahead and schedule this call? Please say yes, no, or provide your correct contact information if needed.",
             "stage": "confirming",
             "done": False,
             "schedule_state": state
@@ -581,6 +614,8 @@ def _parse_contact_from_speech(user_text: str) -> tuple[Optional[str], Optional[
     text = user_text.strip()
     text_lower = text.lower()
     
+    print(f"🔍 Parsing contact info from: '{text}'")
+    
     # Look for email patterns (more comprehensive)
     email_patterns = [
         r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b',
@@ -595,6 +630,7 @@ def _parse_contact_from_speech(user_text: str) -> tuple[Optional[str], Optional[
             # Clean up "at" and "dot" patterns
             if " at " in email.lower():
                 email = email.replace(" at ", "@").replace(" dot ", ".")
+            print(f"📧 Found email: {email}")
             break
     
     # Look for phone patterns (various formats)
@@ -610,6 +646,7 @@ def _parse_contact_from_speech(user_text: str) -> tuple[Optional[str], Optional[
         phone_match = re.search(pattern, text)
         if phone_match:
             phone = phone_match.group(0)
+            print(f"📞 Found phone: {phone}")
             break
     
     # For name, use more comprehensive patterns
@@ -634,6 +671,7 @@ def _parse_contact_from_speech(user_text: str) -> tuple[Optional[str], Optional[
                 not re.search(r'@', potential_name) and 
                 not re.search(r'\d', potential_name)):
                 name = potential_name
+                print(f"👤 Found name: {name}")
                 break
     
     # If we still don't have a name, try to extract from remaining text
@@ -649,7 +687,18 @@ def _parse_contact_from_speech(user_text: str) -> tuple[Optional[str], Optional[
         name_candidates = re.findall(r'\b([A-Z][a-z]+\s+[A-Z][a-z]+)\b', clean_text)
         if name_candidates:
             name = name_candidates[0]
+            print(f"👤 Found name from cleaned text: {name}")
     
+    # Additional fallback: if we have email/phone but no name, try to extract from the beginning
+    if not name and (email or phone):
+        # Look for name at the beginning of the text
+        beginning_text = text.split('email')[0] if 'email' in text_lower else text.split('phone')[0] if 'phone' in text_lower else text
+        name_match = re.search(r'\b([A-Z][a-z]+\s+[A-Z][a-z]+)\b', beginning_text)
+        if name_match:
+            name = name_match.group(1)
+            print(f"👤 Found name from beginning: {name}")
+    
+    print(f"✅ Parsed contact info - Name: {name}, Email: {email}, Phone: {phone}")
     return name, email, phone
 
 def _is_yes_response(text: str) -> bool:
