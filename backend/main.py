@@ -45,31 +45,7 @@ def guardrails_check(text: str) -> dict:
     """Check if text violates content policy guardrails"""
     return check_guardrails(text)
 
-def is_relevant_question(question: str) -> bool:
-    """Check if the question is relevant - let the LLM handle reasoning"""
-    question_lower = question.lower()
-    
-    # Basic validation - question should be substantial
-    if len(question.strip()) < 3:
-        return False
-    
-    # Only filter out obviously irrelevant patterns
-    irrelevant_patterns = [
-        "what is the weather",
-        "tell me a joke", 
-        "what time is it",
-        "how are you",
-        "hello",
-        "hi",
-        "hey"
-    ]
-    
-    # If it matches clearly irrelevant patterns, return False
-    if any(pattern in question_lower for pattern in irrelevant_patterns):
-        return False
-    
-    # Let the LLM decide for everything else based on context
-    return True
+
 
 app = FastAPI()
 app.add_middleware(
@@ -142,14 +118,7 @@ def run_rag_pipeline(question: str) -> dict:
             "error": "Empty or too short question"
         }
     
-    # Temporarily disable relevance filtering to debug
-    # if not is_relevant_question(question):
-    #     return {
-    #         "answer": "I'm here to help with Aven financial services. Please ask me questions about Aven cards, applications, payments, or other Aven-related topics. How can I help you with Aven today?",
-    #         "sources": [],
-    #         "latency_ms": 0,
-    #         "error": "Off-topic question"
-    #     }
+
     
     t0 = time.time()
     
@@ -177,16 +146,7 @@ def run_rag_pipeline(question: str) -> dict:
     good_matches = [hit for hit in matches if hit.get("_score", 0) > SIMILARITY_THRESHOLD]
     all_matches = matches  # Use all matches for context to improve coverage
     
-    # Debug: Print all similarity scores
-    print(f"🔍 Found {len(matches)} matches, {len(good_matches)} with good similarity (threshold: {SIMILARITY_THRESHOLD})")
-    print("📊 Similarity scores:")
-    for i, hit in enumerate(matches):
-        score = hit.get("_score", 0)
-        source = hit.get("fields", {}).get("source", "unknown")
-        print(f"  Match {i+1}: {score:.3f} - {source}")
-    
-    # Debug: Print question being asked
-    print(f"❓ Question: {question}")
+
 
         
     if not matches:
@@ -215,9 +175,7 @@ def run_rag_pipeline(question: str) -> dict:
     # Combine contexts, prioritizing good matches
     context = good_context + "\n---\n" + all_context if good_context else all_context
     
-    # Debug: Print context info after it's built
-    print(f"📝 Context length: {len(context)} characters")
-    print(f"📝 Context preview: {context[:200]}...")
+
     
 
 
@@ -254,7 +212,7 @@ def run_rag_pipeline(question: str) -> dict:
         )
         llm_time = time.time() - t1
         answer = chat_res.choices[0].message.content.strip()
-        print(f"🤖 LLM Response: {answer}")
+
     except Exception as e:
         print(f"❌ LLM Error: {e}")
         llm_time = time.time() - t1
@@ -295,11 +253,8 @@ def run_rag_pipeline(question: str) -> dict:
     
     should_trigger_schedule = has_scheduling_intent or has_uncertainty or (is_affirmative_response and is_scheduling_offer_response)
     
-    # Always return empty sources list
-    sources = []
-    
     # Build response with consistent structure
-    def build_response(answer: str, sources: list, latency_ms: int, **kwargs):
+    def build_response(answer: str, latency_ms: int, **kwargs):
         """Build a consistent response structure"""
         response = {
             "answer": answer,
@@ -320,12 +275,11 @@ def run_rag_pipeline(question: str) -> dict:
         
         return build_response(
             answer, 
-            sources, 
             int((time.time() - t0) * 1000),
             trigger_schedule=should_trigger_schedule
         )
 
-    return build_response(answer, sources, int((time.time() - t0) * 1000))
+    return build_response(answer, int((time.time() - t0) * 1000))
 
 @app.post("/ask")
 async def ask_question(req: Request):
@@ -383,7 +337,6 @@ async def ask_question(req: Request):
             result["schedule_state"] = sched.get("schedule_state")
         except Exception as e:
             print(f"Text Schedule Start Error: {e}")
-            pass
     
     return result
 
@@ -471,7 +424,6 @@ async def voice_ask(
             print(f"🎤 No schedule_state in voice request")
     except Exception as e:
         print(f"❌ Error parsing schedule_state: {e}")
-        pass
 
     # ---------- 3a.  Scheduling branch ----------
     if schedule_state and schedule_state.get("active", False):
@@ -527,7 +479,6 @@ async def voice_ask(
             )
         except Exception as e:
             print(f"Schedule Start Error: {e}")
-            pass
 
     # Plain answer
     speech = rag["answer"]
